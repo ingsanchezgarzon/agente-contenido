@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Article",
+  "type": "object",
+  "required": ["topic", "slug", "blog", "linkedin_post", "instagram_caption"],
+  "properties": {
+    "topic": { "type": "string" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "blog": {
+      "type": "object",
+      "required": ["title", "meta_description", "body_markdown"],
+      "properties": {
+        "title": { "type": "string" },
+        "meta_description": { "type": "string", "maxLength": 160 },
+        "body_markdown": { "type": "string" },
+        "primary_keyword": { "type": "string" },
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "linkedin_post": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 3000 },
+        "call_to_action": { "type": "string" }
+      }
+    },
+    "instagram_caption": {
+      "type": "object",
+      "required": ["text", "hashtags"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 2200 },
+        "hashtags": {
+          "type": "array",
+          "maxItems": 30,
+          "items": { "type": "string" }
+        },
+        "call_to_action": { "type": "string" }
+      }
+    }
+  }
+}

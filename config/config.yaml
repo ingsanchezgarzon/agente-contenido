@@ -1,0 +1,46 @@
+pipeline:
+  language: english
+  target_audience: "foreigners and expats living in France"
+  content_tone: "professional but accessible"
+
+content:
+  blog:
+    target_word_count: 1800
+    min_word_count: 1500
+    max_word_count: 2500
+    include_toc: true
+    include_sources: true
+
+  linkedin:
+    max_chars: 3000
+    recommended_chars: 1500
+    include_emoji: true
+    line_break_after_hook: true
+
+  instagram:
+    max_chars: 2200
+    recommended_chars: 1000
+    max_hashtags: 30
+    recommended_hashtags: 15
+    include_emoji: true
+
+seo:
+  primary_keyword_in_title: true
+  primary_keyword_in_first_paragraph: true
+  meta_description_max_chars: 160
+  min_internal_links: 0
+  min_sources: 3
+
+research:
+  max_sources: 10
+  max_search_queries: 5
+  preferred_source_languages: ["en", "fr"]
+  preferred_source_types: ["official", "news", "expert-blog"]
+
+output_dirs:
+  research: outputs/research
+  strategy: outputs/strategy
+  drafts: outputs/drafts
+  approved: outputs/approved
+  published: outputs/published
+  inputs: inputs/topics

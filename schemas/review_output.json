@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReviewOutput",
+  "type": "object",
+  "required": ["topic", "slug", "approved", "overall_score", "publish_ready"],
+  "properties": {
+    "topic": { "type": "string" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "approved": { "type": "boolean" },
+    "overall_score": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "issues_found": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "issues_fixed": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "blog": {
+      "type": "object",
+      "required": ["title", "meta_description", "body_markdown"],
+      "properties": {
+        "title": { "type": "string" },
+        "meta_description": { "type": "string", "maxLength": 160 },
+        "body_markdown": { "type": "string" },
+        "estimated_read_time_minutes": { "type": "integer" },
+        "primary_keyword": { "type": "string" }
+      }
+    },
+    "linkedin_post": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 3000 },
+        "call_to_action": { "type": "string" }
+      }
+    },
+    "instagram_caption": {
+      "type": "object",
+      "required": ["text", "hashtags"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 2200 },
+        "hashtags": {
+          "type": "array",
+          "maxItems": 30,
+          "items": { "type": "string" }
+        },
+        "call_to_action": { "type": "string" }
+      }
+    },
+    "publish_ready": { "type": "boolean" }
+  }
+}

@@ -1,0 +1,70 @@
+topics:
+  - id: french-taxation
+    name: "French Taxation for Foreigners"
+    description: "Taxes, declarations, social contributions, and tax treaties for expats"
+    seed_keywords:
+      - "impôts France expatriés"
+      - "French tax declaration expat"
+      - "cotisations sociales France foreigners"
+      - "tax treaty France double taxation"
+      - "income tax France non-resident"
+    content_angles:
+      - "How to file your first French tax declaration"
+      - "Understanding French social contributions as a foreign worker"
+      - "Double taxation treaties: protecting your income in France"
+
+  - id: real-estate-investment
+    name: "Real Estate Investment in France"
+    description: "SCI, LMNP, furnished rentals, and property investment strategies"
+    seed_keywords:
+      - "SCI société civile immobilière expatriés"
+      - "LMNP loueur meublé non professionnel"
+      - "investissement locatif France étranger"
+      - "SCI vs LMNP comparison"
+      - "furnished rental income tax France"
+    content_angles:
+      - "SCI vs LMNP: which structure is right for expats?"
+      - "How to invest in French real estate as a foreigner"
+      - "LMNP explained: tax benefits for furnished rentals"
+
+  - id: savings-investment
+    name: "Savings and Investment Products in France"
+    description: "PEA, Assurance-vie, Livret A, and investment accounts for expats"
+    seed_keywords:
+      - "PEA plan epargne actions foreigners"
+      - "assurance-vie expat France"
+      - "Livret A eligibility foreigners"
+      - "investment accounts France non-resident"
+      - "bourse France expat broker"
+    content_angles:
+      - "Can you open a PEA as a foreigner in France?"
+      - "Assurance-vie for expats: the complete guide"
+      - "Best investment accounts for foreigners living in France"
+
+  - id: cross-border-finance
+    name: "Cross-Border Finance"
+    description: "International money transfers, multi-currency accounts, and cross-border money management"
+    seed_keywords:
+      - "Wise Revolut France expat"
+      - "international money transfer France"
+      - "multi-currency account France"
+      - "sending money abroad from France tax"
+      - "cross-border banking expat"
+    content_angles:
+      - "Best apps for sending money internationally from France"
+      - "How to manage money across multiple countries as an expat"
+      - "Wise vs Revolut vs traditional bank for expats in France"
+
+  - id: practical-finance
+    name: "Practical Financial Life in France"
+    description: "Banking, credit, insurance, CAF benefits, and healthcare for foreigners"
+    seed_keywords:
+      - "open bank account France foreigner"
+      - "CAF allocations familles expat"
+      - "health insurance France expat"
+      - "credit score France foreigner"
+      - "French pension system expat"
+    content_angles:
+      - "How to open a bank account in France as a foreigner"
+      - "CAF benefits: what expats are entitled to in France"
+      - "Understanding French health insurance as an expat"

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ContentBrief",
+  "type": "object",
+  "required": ["topic", "slug", "angle", "target_keywords", "formats", "blog_outline"],
+  "properties": {
+    "topic": { "type": "string" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "angle": { "type": "string", "description": "The unique narrative angle for this content piece" },
+    "target_audience": { "type": "string" },
+    "pain_points": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "target_keywords": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "secondary_keywords": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "formats": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["blog", "linkedin", "instagram"] }
+    },
+    "tone": { "type": "string" },
+    "hooks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "blog_outline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "section": { "type": "string" },
+          "key_points": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "word_count_blog": { "type": "integer", "minimum": 1000 },
+    "linkedin_angle": { "type": "string" },
+    "instagram_visual_concept": { "type": "string" }
+  }
+}
