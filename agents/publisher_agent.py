@@ -75,6 +75,41 @@ def _build_imagen_prompt(reviewed: dict) -> str:
     return response.text.strip()
 
 
+def _build_diagram_prompt(reviewed: dict) -> str:
+    """Ask Gemini to write a plain-text infographic diagram prompt from the content results."""
+    topic = reviewed.get("topic", "")
+    title = reviewed.get("blog", {}).get("title", topic)
+    meta = reviewed.get("blog", {}).get("meta_description", "")
+    body = reviewed.get("blog", {}).get("body_markdown", "")[:3000]
+
+    system = (
+        "You are an information designer. Given a blog article about personal finance for expats "
+        "in France, write a detailed plain-text prompt that a designer or AI tool could use to "
+        "create an infographic diagram summarising all key results, data points, steps, and "
+        "comparisons from the article. "
+        "The prompt must describe: the diagram layout (sections, flow, hierarchy), every data "
+        "point or statistic to include, labels, callouts, colour guidance (navy blue + gold), "
+        "and the visual style (minimalist, flat, corporate). "
+        "Write it as a single structured prompt — no commentary, no preamble, just the prompt."
+    )
+    user = (
+        f"Topic: {topic}\n"
+        f"Title: {title}\n"
+        f"Meta description: {meta}\n\n"
+        f"Article body (excerpt):\n{body}"
+    )
+
+    response = gemini_client.models.generate_content(
+        model=TEXT_MODEL,
+        contents=user,
+        config=types.GenerateContentConfig(
+            system_instruction=system,
+            max_output_tokens=800,
+        ),
+    )
+    return response.text.strip()
+
+
 def _generate_infographic(prompt: str, out_path: Path) -> None:
     """Generate a square infographic with Hugging Face for free and save it as PNG."""
     # Call the free Hugging Face routing engine directly
@@ -112,6 +147,7 @@ def run(slug: str) -> Path:
         "linkedin": {},
         "instagram": {},
         "infographic": {},
+        "diagram_prompt": {},
     }
 
     # LinkedIn post text output extraction
@@ -147,6 +183,18 @@ def run(slug: str) -> Path:
     except Exception as exc:
         error(AGENT, f"Image generation failed: {exc}")
         result["infographic"] = {"status": "failed", "error": str(exc)}
+
+    # Diagram prompt → txt
+    info(AGENT, "Building infographic diagram prompt…")
+    try:
+        diagram_prompt = _build_diagram_prompt(reviewed)
+        dp_path = out_dir / "infographic_diagram_prompt.txt"
+        dp_path.write_text(diagram_prompt, encoding="utf-8")
+        result["diagram_prompt"] = {"status": "saved", "file": str(dp_path)}
+        success(AGENT, f"Diagram prompt saved → {dp_path.name}")
+    except Exception as exc:
+        error(AGENT, f"Diagram prompt generation failed: {exc}")
+        result["diagram_prompt"] = {"status": "failed", "error": str(exc)}
 
     # Final execution logging output compilation
     log_path = ROOT / "outputs" / "published" / f"{slug}_published.json"

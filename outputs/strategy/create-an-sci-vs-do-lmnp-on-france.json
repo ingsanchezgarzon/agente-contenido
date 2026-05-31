@@ -1,0 +1,101 @@
+{
+  "formats": [
+    "blog",
+    "linkedin",
+    "instagram"
+  ],
+  "pain_points": [
+    "Expats often struggle with French tax and legal jargon.",
+    "Confusion between SCI and LMNP leads to suboptimal tax outcomes.",
+    "Underestimating the administrative burden of each structure.",
+    "Risk of unintended corporate tax implications for furnished rentals via SCI."
+  ],
+  "topic": "Create an SCI vs do LMNP on France",
+  "linkedin_angle": "French property ownership can be a fantastic investment for expats, but choosing the right legal structure is critical. I recently analyzed the differences between setting up an SCI (Société Civile Immobilière) and opting for the LMNP (Loueur en Meublé Non Professionnel) status. Key differences lie in taxation, administration, and suitability for furnished vs. unfurnished rentals. While SCI offers flexibility in ownership and transmission, LMNP can provide significant tax advantages through depreciation, especially for furnished rentals. However, an SCI renting furnished property can trigger corporate tax. My latest brief dives deep into these nuances to help expats make an informed decision. #ExpatFrance #FrenchProperty #RealEstateInvestment #Taxation #SCI #LMNP",
+  "angle": "For expats in France, choosing between an SCI and LMNP for rental properties involves understanding the significant tax and administrative differences. This content will demystify these options, helping expats make an informed decision to optimize their investments and avoid potential pitfalls.",
+  "target_keywords": [
+    "SCI vs LMNP France",
+    "French property tax for expats",
+    "investing in France SCI LMNP",
+    "rental income tax France expat",
+    "LMNP vs SCI France"
+  ],
+  "hooks": [
+    "Navigating French property investment? SCI or LMNP – don't get caught in a tax trap! Understand the crucial differences expats need to know.",
+    "Expat in France: Is your rental property structured for maximum tax efficiency? SCI vs. LMNP could save you thousands.",
+    "French property ownership for expats: SCI or LMNP? We break down the tax and admin maze so you can invest with confidence."
+  ],
+  "blog_outline": [
+    {
+      "section": "Introduction: Why this choice matters for expats in France",
+      "key_points": [
+        "Briefly introduce SCI and LMNP.",
+        "Highlight the importance of this decision for expats regarding taxation and administration.",
+        "State the goal: to help expats choose the right structure."
+      ]
+    },
+    {
+      "key_points": [
+        "What is an SCI?",
+        "How it works for property ownership and management.",
+        "Taxation under the IR regime (individual taxation on partner's share).",
+        "Pros: flexibility in administration, property transmission.",
+        "Cons: potential corporate tax if renting furnished, administrative complexity."
+      ],
+      "section": "Understanding SCI (Société Civile Immobilière)"
+    },
+    {
+      "section": "Understanding LMNP (Loueur en Meublé Non Professionnel)",
+      "key_points": [
+        "What is LMNP status?",
+        "Individual investment focus.",
+        "Taxation: BIC (Bénéfices Industriels et Commerciaux) and depreciation benefits.",
+        "Pros: tax advantages (depreciation, charge deductions), VAT recovery for new builds.",
+        "Cons: profit limits (€23k/year), accounting requirements, potential IFI inclusion."
+      ]
+    },
+    {
+      "key_points": [
+        "Individual vs. Collective Investment.",
+        "Taxation Comparison: IR (SCI) vs. BIC (LMNP) and their implications.",
+        "Furnished vs. Unfurnished Rentals: When LMNP can be problematic for an SCI.",
+        "Management & Administration: Complexity and requirements for each.",
+        "Succession Planning: How each structure impacts inheritance."
+      ],
+      "section": "Key Differences & Decision Factors"
+    },
+    {
+      "key_points": [
+        "Ideal for multiple owners, complex family property holding, or long-term wealth transmission.",
+        "When the property will be unfurnished.",
+        "Seeking administrative flexibility."
+      ],
+      "section": "When to Choose SCI"
+    },
+    {
+      "key_points": [
+        "Ideal for individual investors, focusing on maximizing rental income with tax efficiencies.",
+        "When renting furnished property.",
+        "Simpler structure for single property investments."
+      ],
+      "section": "When to Choose LMNP"
+    },
+    {
+      "section": "Special Cases: SARL de Famille",
+      "key_points": [
+        "Briefly explain SARL de famille as a hybrid option combining LMNP benefits with company structure.",
+        "When it might be a good alternative."
+      ]
+    },
+    {
+      "section": "Conclusion: Making the Right Choice for Your French Property Investment",
+      "key_points": [
+        "Recap of key considerations.",
+        "Actionable advice: consult a professional.",
+        "Final encouragement for expats to navigate French property investment confidently."
+      ]
+    }
+  ],
+  "instagram_visual_concept": "A split image: one side shows a diverse group of friends/family looking at property plans (representing SCI flexibility/collective ownership), the other side shows a single person happily managing keys/rental documents in a stylish French apartment (representing LMNP individual focus and furnished rental). Use a clean, modern infographic style with French flag colors subtly integrated.",
+  "slug": "create-an-sci-vs-do-lmnp-on-france"
+}
