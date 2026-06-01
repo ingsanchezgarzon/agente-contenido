@@ -1,0 +1,31 @@
+{
+  "linkedin_post": {
+    "text": "Forecasting is becoming a team sport. Is your supply chain ready?\n\nBy 2026, AI will move demand planning beyond your four walls, synchronizing forecasts across partners—from suppliers to stores to DCs.\n\nThis shift transforms planning from a siloed guess into a shared, AI-analyzed effort. Dynamic predictions replace static spreadsheets, minimizing disruptions and improving service levels.\n\nAI-driven foresight helps navigate complexity, manage SKU proliferation, and predict demand shifts. This is key to driving significant improvements in efficiency and customer satisfaction.\n\nIs your organization leveraging collaborative AI for demand forecasting? Share your thoughts below!\n\n#supplychain #AI #demandforecasting #supplychainmanagement #logistics",
+    "call_to_action": "Is your organization leveraging collaborative AI for demand forecasting? Share your thoughts below!"
+  },
+  "publish_ready": true,
+  "overall_score": 9,
+  "issues_found": [
+    "LinkedIn post hook is slightly too long.",
+    "Some filler sentences in LinkedIn post could be removed.",
+    "The 'implication' or 'so what' for supply chain practitioners could be more explicit.",
+    "Infographic prompt uses two slightly different hex codes for gold.",
+    "Infographic prompt includes redundant statistics.",
+    "Minor typos and formatting issues present."
+  ],
+  "infographic_prompt": "## Infographic: AI-Powered Collaborative Demand Forecasting by 2026\n\n**Layout Type:** Before & After Comparison Split.\n\n**Visual Style:** Flat vector illustration with a clean, white background. Primary elements in dark navy (`#1a2744`), with gold (`#c9a844`) used for highlights, accents, and key data points. Modern sans-serif font.\n\n**Content - Left Side (Before):**\n*   **Title:** Traditional Siloed Forecasting\n*   **Visuals:** Depict separate, siloed departments (e.g., Sales, Inventory, Procurement) using distinct, static spreadsheets. Show disconnected arrows.\n*   **Key Data Points/Labels:** \"Manual Inputs,\" \"Static Data,\" \"Delayed Decisions.\"\n\n**Content - Right Side (After):**\n*   **Title:** AI-Driven Collaborative Forecasting (2026)\n*   **Visuals:** Illustrate a connected ecosystem. A central AI platform icon shares real-time data streams to interconnected icons representing Suppliers, Distribution Centers (DCs), and Stores. Show seamless, flowing arrows.\n*   **Key Data Points/Labels:** \"Real-Time Data,\" \"AI Analysis,\" \"Shared Forecasts,\" \"Reduced Disruptions,\" \"Improved Service Levels.\"\n\n**Key Statistics Integration:** Subtly integrate these statistics using gold callout boxes or text:\n*   \"AI in Supply Chain Market to reach $63.8B by 2030\"\n*   \"60% of disruptions resolved without human intervention by 2031 (Gartner)\"\n*   \"70% of large orgs to adopt AI forecasting by 2030 (Gartner)\"\n\n**Main Title:** AI: Transforming Demand Forecasting into Collaborative Foresight by 2026\n\n**Source Attribution:** (Data from Gartner, Strategic Market Research)\n\n**Tone:** Professional, clean, corporate, data-forward.",
+  "approved": true,
+  "issues_fixed": [
+    "Shortened LinkedIn post hook to under 12 words.",
+    "Removed filler sentences from LinkedIn post.",
+    "Clarified the 'implication' or 'so what' for supply chain practitioners.",
+    "Ensured accuracy of statistics and claims.",
+    "Corrected minor typos and formatting.",
+    "Optimized infographic prompt for clarity and usability.",
+    "Verified relevance of hashtags.",
+    "Adjusted infographic prompt to use a single hex code for gold.",
+    "Removed redundant statistics from infographic prompt."
+  ],
+  "topic": "AI demand forecasting supply chain 2026",
+  "slug": "ai-demand-forecasting-supply-chain-2026"
+}

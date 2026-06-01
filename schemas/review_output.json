@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ReviewOutput",
   "type": "object",
-  "required": ["topic", "slug", "approved", "overall_score", "publish_ready"],
+  "required": ["topic", "slug", "approved", "overall_score", "publish_ready", "linkedin_post", "infographic_prompt"],
   "properties": {
     "topic": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
@@ -16,37 +16,21 @@
       "type": "array",
       "items": { "type": "string" }
     },
-    "blog": {
-      "type": "object",
-      "required": ["title", "meta_description", "body_markdown"],
-      "properties": {
-        "title": { "type": "string" },
-        "meta_description": { "type": "string", "maxLength": 160 },
-        "body_markdown": { "type": "string" },
-        "estimated_read_time_minutes": { "type": "integer" },
-        "primary_keyword": { "type": "string" }
-      }
-    },
     "linkedin_post": {
       "type": "object",
       "required": ["text"],
       "properties": {
-        "text": { "type": "string", "maxLength": 3000 },
-        "call_to_action": { "type": "string" }
-      }
-    },
-    "instagram_caption": {
-      "type": "object",
-      "required": ["text", "hashtags"],
-      "properties": {
-        "text": { "type": "string", "maxLength": 2200 },
-        "hashtags": {
-          "type": "array",
-          "maxItems": 30,
-          "items": { "type": "string" }
+        "text": {
+          "type": "string",
+          "maxLength": 3000,
+          "description": "Full LinkedIn post ready to copy-paste, including line breaks, emojis, and hashtags"
         },
         "call_to_action": { "type": "string" }
       }
+    },
+    "infographic_prompt": {
+      "type": "string",
+      "description": "Detailed, ready-to-use text prompt for an AI image generator to create a professional supply chain / AI infographic"
     },
     "publish_ready": { "type": "boolean" }
   }
