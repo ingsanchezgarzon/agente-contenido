@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Union
 
 import jsonschema
 import yaml
@@ -20,34 +20,34 @@ def slugify(text: str) -> str:
     return text.strip("-")
 
 
-def load_json(path: str | Path) -> dict:
+def load_json(path: Union[str, Path]) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_json(data: dict, path: str | Path) -> None:
+def save_json(data: dict, path: Union[str, Path]) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def load_yaml(path: str | Path) -> Any:
+def load_yaml(path: Union[str, Path]) -> Any:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
-def load_markdown(path: str | Path) -> str:
+def load_markdown(path: Union[str, Path]) -> str:
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
 
-def save_markdown(content: str, path: str | Path) -> None:
+def save_markdown(content: str, path: Union[str, Path]) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
 
 
-def validate_json(data: dict, schema_path: str | Path) -> list[str]:
+def validate_json(data: dict, schema_path: Union[str, Path]) -> List[str]:
     schema = load_json(schema_path)
     validator = jsonschema.Draft7Validator(schema)
     errors = [e.message for e in validator.iter_errors(data)]

@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Optional
 
 import requests
 from dotenv import load_dotenv
@@ -45,7 +46,7 @@ def publish_linkedin_post(text: str) -> dict:
     }
 
 
-def publish_instagram_post(caption: str, image_url: str | None = None) -> dict:
+def publish_instagram_post(caption: str, image_url: Optional[str] = None) -> dict:
     token = os.getenv("INSTAGRAM_ACCESS_TOKEN")
     account_id = os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
 

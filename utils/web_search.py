@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Any
+from typing import Any, Dict, List
 
 import requests
 from dotenv import load_dotenv
@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def search_tavily(query: str, max_results: int = 5) -> list[dict]:
+def search_tavily(query: str, max_results: int = 5) -> List[Dict]:
     api_key = os.getenv("TAVILY_API_KEY")
     if not api_key:
         raise EnvironmentError("TAVILY_API_KEY not set in .env")
@@ -37,7 +37,7 @@ def search_tavily(query: str, max_results: int = 5) -> list[dict]:
     ]
 
 
-def search_serper(query: str, max_results: int = 5) -> list[dict]:
+def search_serper(query: str, max_results: int = 5) -> List[Dict]:
     api_key = os.getenv("SERPER_API_KEY")
     if not api_key:
         raise EnvironmentError("SERPER_API_KEY not set in .env")
@@ -61,7 +61,7 @@ def search_serper(query: str, max_results: int = 5) -> list[dict]:
     ]
 
 
-def search(query: str, max_results: int = 5) -> list[dict]:
+def search(query: str, max_results: int = 5) -> List[Dict]:
     if os.getenv("TAVILY_API_KEY"):
         return search_tavily(query, max_results)
     elif os.getenv("SERPER_API_KEY"):

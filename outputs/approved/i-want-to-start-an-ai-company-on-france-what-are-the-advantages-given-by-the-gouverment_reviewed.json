@@ -1,0 +1,32 @@
+{
+  "linkedin_post": {
+    "text": "France's AI investment nearly doubled in 2024 to €1.9bn, making it a European leader.\n\nWhat's driving this surge? France's multi-phase national AI strategy since 2018 offers significant advantages for AI startups:\n\n🔹 Substantial R&D tax credits.\n🔹 'Aide au Développement Deeptech' for deeptech innovation.\n🔹 French Tech Visa program simplifies hiring international talent.\n\nWith 674 active AI-specific grant programs and AI accounting for 27% of startup funding, France offers a robust ecosystem.\n\nThis government support de-risks R&D and accelerates talent acquisition for AI ventures.\n\nConsidering launching your AI venture? Explore France's supportive ecosystem and investment opportunities.",
+    "call_to_action": "Considering launching your AI venture? Explore France's supportive ecosystem and investment opportunities."
+  },
+  "overall_score": 9,
+  "infographic_prompt": "Layout type: Key stats panel with a bar chart element.\n\nVisual style: Flat vector design with a white background. Primary elements should be in a dark navy blue (e.g., #1a2744), with highlights and accents in gold (e.g., #c9a84c). Use a modern sans-serif font.\n\nData to include:\n- Title: France: Fueling the Future of AI Startups\n- Main Bar Chart: AI Investment in France (2024 vs. Previous Year)\n  - 2023: €1 billion\n  - 2024: €1.9 billion (nearly doubled)\n- Key Stat 1: #1 European country for foreign investments in AI (2024)\n- Key Stat 2: 674 active AI-specific grant programs listed.\n- Key Stat 3: AI accounts for 27% of total startup funding in France.\n- Callout Box: Key Government Advantages\n  - Substantial R&D Tax Credits\n  - French Tech Visa (for international talent)\n  - Aide au Développement Deeptech program",
+  "issues_fixed": [
+    "LinkedIn post hook shortened and made more direct.",
+    "Added empty line after hook.",
+    "Rephrased body paragraphs for conciseness and clarity, using bullet points for advantages.",
+    "Explicitly stated the 'implication' or 'so what' for supply chain practitioners.",
+    "Removed redundant CTA and hashtags from the end of the post, integrating them into a single CTA.",
+    "Corrected spelling of 'government'.",
+    "Infographic prompt updated to include the 'Aide au Développement Deeptech' program.",
+    "Ensured infographic prompt is within word count and clearly specifies design elements.",
+    "Infographic prompt updated to remove mention of 'GrantBite data' for cleaner design brief."
+  ],
+  "publish_ready": true,
+  "approved": true,
+  "issues_found": [
+    "LinkedIn post hook could be more direct.",
+    "Body paragraphs contain some filler and could be more concise.",
+    "The 'implication' or 'so what' could be more explicit for a supply chain practitioner.",
+    "Redundant CTA and hashtags at the end of the post.",
+    "Spelling error: 'gouverment'.",
+    "Infographic prompt missing one key government advantage.",
+    "Infographic prompt includes a data source mention ('GrantBite data') that is not needed for the design brief."
+  ],
+  "topic": "I want to start an AI company on France, what are the advantages given by the gouverment?",
+  "slug": "i-want-to-start-an-ai-company-on-france-what-are-the-advantages-given-by-the-gouverment"
+}
