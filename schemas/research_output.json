@@ -29,27 +29,32 @@
       "type": "array",
       "minItems": 3,
       "items": { "type": "string" },
-      "description": "Core factual findings: capabilities, benchmarks, deployment results, adoption rates"
+      "description": "Core factual findings: figures, benchmarks, rules, thresholds, historical averages"
     },
     "key_developments": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Recent launches, model releases, partnerships, or research breakthroughs in AI"
+      "description": "Recent news, regulatory changes, product launches, or trends relevant to the topic"
     },
-    "companies_mentioned": {
+    "personal_finance_applications": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "AI vendors, supply chain software providers, and enterprise adopters named in sources"
+      "description": "Concrete actions a regular person can take based on this research"
     },
-    "supply_chain_applications": {
+    "common_mistakes": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Specific supply chain use cases where AI is being applied: demand forecasting, warehouse automation, etc."
+      "description": "Frequent errors or misconceptions everyday people have about this topic"
     },
     "statistics": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Quantified data points: ROI figures, accuracy improvements, cost reductions, adoption percentages"
+      "description": "Quantified data points: returns, fees, rates, adoption percentages, averages"
+    },
+    "simple_analogies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Comparisons or metaphors that make the concept easy to understand for a non-expert"
     },
     "expert_quotes": {
       "type": "array",

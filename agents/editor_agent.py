@@ -66,23 +66,24 @@ def run(slug: str) -> Path:
     social_data = load_json(social_path)
     system_prompt = _load_system_prompt(slug)
 
-    info(AGENT, "Running editorial review with Gemini…")
+    info(AGENT, "Running editorial review with Gemini...")
     review = call_with_tool(
         system_prompt=system_prompt,
         user_message=(
             f"Review and edit the following content for slug '{slug}'.\n\n"
-            f"## LinkedIn Post + Infographic Prompt\n\n"
+            f"## Blog Post + Story Concept\n\n"
             f"{json.dumps(social_data, indent=2, ensure_ascii=False)}\n\n"
-            "Work through every item in the review checklist. Fix all fixable issues "
-            "directly and submit the corrected content via the review tool."
+            "Work through every item in the review checklist. Fix all fixable issues directly. "
+            "Then design the complete Instagram story plan (4 or 6 slides). "
+            "Submit everything via the review tool."
         ),
         fn_name="submit_review",
         fn_description=(
-            "Submit the editorial review results and the fully corrected, "
-            "publication-ready LinkedIn post and infographic prompt."
+            "Submit the editorial review results, the corrected blog post, "
+            "and the complete Instagram story plan with one slide object per story slide."
         ),
         fn_parameters=_build_review_params(),
-        max_output_tokens=4096,
+        max_output_tokens=6144,
     )
 
     review["topic"] = social_data.get("topic", slug)
@@ -99,10 +100,12 @@ def run(slug: str) -> Path:
     approved = review.get("approved", False)
     publish_ready = review.get("publish_ready", False)
     score = review.get("overall_score", "?")
-    info(AGENT, f"approved={approved}  publish_ready={publish_ready}  score={score}/10")
+    story_format = review.get("story_plan", {}).get("format", "?")
+    n_slides = len(review.get("story_plan", {}).get("slides", []))
+    info(AGENT, f"approved={approved}  publish_ready={publish_ready}  score={score}/10  story={story_format} ({n_slides} slides)")
 
     if not approved:
-        warning(AGENT, "Content was NOT approved — check issues_found in the output file.")
+        warning(AGENT, "Content was NOT approved -- check issues_found in the output file.")
     if approved and not publish_ready:
         warning(AGENT, "Approved but flagged for human review before publishing.")
 

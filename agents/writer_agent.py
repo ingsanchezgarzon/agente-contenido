@@ -1,11 +1,11 @@
 """
-Writer agent — drafts the LinkedIn post and infographic prompt from research + strategy.
+Writer agent — drafts the blog post and story concept from research + strategy.
 Reads:  outputs/research/<slug>.json + outputs/strategy/<slug>.json
 Writes: outputs/drafts/<slug>_social.json
 
 Usage:
     python -m agents.writer_agent <slug>
-    python agents/writer_agent.py ai-demand-forecasting-supply-chain-2025
+    python agents/writer_agent.py how-to-start-investing-2026
 """
 
 import json
@@ -37,40 +37,42 @@ def _render_prompt(template_text: str, **kwargs) -> str:
 _CONTENT_PARAMS = {
     "type": "object",
     "properties": {
-        "linkedin_post": {
+        "blog_post": {
             "type": "object",
             "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Compelling headline, max 12 words, sounds like a human wrote it.",
+                },
                 "text": {
                     "type": "string",
                     "description": (
-                        "Full LinkedIn post: hook on line 1, empty line, body paragraphs "
-                        "or bullets, implication, CTA, and 3-5 hashtags on the last line. "
-                        "Max 3000 characters."
+                        "Full blog post, 500-750 words. Conversational, warm, jargon-free. "
+                        "Structure: hook → problem/setup → core content (3-5 points) → takeaway → closing line. "
+                        "Readable aloud as a video script."
                     ),
                 },
-                "call_to_action": {"type": "string"},
             },
-            "required": ["text"],
+            "required": ["title", "text"],
         },
-        "infographic_prompt": {
+        "story_concept": {
             "type": "string",
             "description": (
-                "Detailed design brief for an AI image generator or designer. "
-                "Must specify: layout type (bar chart, comparison table, process flow, etc.), "
-                "exact data labels and values from the research, color scheme (navy #1a2744 + gold #c9a84c, "
-                "white background), font style (modern sans-serif), and all text elements. "
-                "150-300 words. Should be executable as-is."
+                "Planning note for the editor. State the format (steps or top5), "
+                "then describe what each slide covers in one sentence. "
+                "Example: 'Format: steps. Intro: why most people lose money. "
+                "Step 1: diversify. Step 2: avoid timing the market. Step 3: automate.'"
             ),
         },
     },
-    "required": ["linkedin_post", "infographic_prompt"],
+    "required": ["blog_post", "story_concept"],
 }
 
 
 # ── main writing function ─────────────────────────────────────────────────────
 
 def _write_content(research: dict, brief: dict) -> dict:
-    info(AGENT, "Drafting LinkedIn post and infographic prompt…")
+    info(AGENT, "Drafting blog post and story concept...")
     template_text = load_markdown(ROOT / "prompts" / "writer_social_prompt.md")
     system_prompt = _render_prompt(
         template_text,
@@ -80,21 +82,20 @@ def _write_content(research: dict, brief: dict) -> dict:
     return call_with_tool(
         system_prompt=system_prompt,
         user_message=(
-            f"Write the LinkedIn post and infographic prompt for: {research['topic']}\n"
-            "Follow the angle, hooks, and structure from your system prompt. "
-            "Use only facts from the research data."
+            f"Write the blog post and story concept for: {research['topic']}\n"
+            "Follow the angle, hooks, and format from your system prompt. "
+            "Use only facts from the research data. Keep it simple and engaging."
         ),
-        fn_name="submit_social_posts",
-        fn_description="Submit the LinkedIn post and the infographic design brief prompt.",
+        fn_name="submit_content",
+        fn_description="Submit the blog post and Instagram story concept.",
         fn_parameters=_CONTENT_PARAMS,
-        max_output_tokens=3000,
+        max_output_tokens=4096,
     )
 
 
 # ── main entry point ──────────────────────────────────────────────────────────
 
 def run(slug: str) -> Path:
-    """Run the writer for the given slug. Returns the social output path."""
     info(AGENT, f"Starting writer for slug='{slug}'")
 
     research_path = ROOT / "outputs" / "research" / f"{slug}.json"
@@ -108,12 +109,12 @@ def run(slug: str) -> Path:
 
     content = _write_content(research, brief)
 
-    social_output = {"topic": research["topic"], "slug": slug, **content}
-    social_path = ROOT / "outputs" / "drafts" / f"{slug}_social.json"
-    save_json(social_output, social_path)
-    success(AGENT, f"LinkedIn post and infographic prompt saved to {social_path}")
+    draft_output = {"topic": research["topic"], "slug": slug, **content}
+    draft_path = ROOT / "outputs" / "drafts" / f"{slug}_social.json"
+    save_json(draft_output, draft_path)
+    success(AGENT, f"Blog post and story concept saved to {draft_path}")
 
-    return social_path
+    return draft_path
 
 
 if __name__ == "__main__":

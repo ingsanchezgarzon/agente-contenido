@@ -1,70 +1,77 @@
-topics:
-  - id: ai-supply-chain-optimization
-    name: "AI for Supply Chain Optimization"
-    description: "Machine learning and AI tools for demand forecasting, inventory management, and network optimization"
-    seed_keywords:
-      - "AI demand forecasting supply chain 2025"
-      - "machine learning inventory optimization"
-      - "generative AI supply chain planning"
-      - "AI supply chain disruption prediction"
-      - "LLM procurement automation"
-    content_angles:
-      - "How AI is transforming demand forecasting accuracy in 2025"
-      - "From reactive to predictive: AI-driven inventory management"
-      - "GPT models in procurement: use cases and ROI"
+# Topic clusters for the Personal Finance & Investing Instagram pipeline
+# Each cluster has seed keywords you can pass as the topic input to main.py
 
-  - id: ai-logistics-automation
-    name: "AI in Logistics and Warehouse Automation"
-    description: "Robotics, computer vision, and AI for warehouse operations, last-mile delivery, and freight"
-    seed_keywords:
-      - "warehouse robotics AI 2025"
-      - "autonomous vehicles logistics"
-      - "computer vision warehouse picking"
-      - "AI route optimization last mile"
-      - "humanoid robots warehouse"
-    content_angles:
-      - "The rise of autonomous warehouses: what's real and what's hype"
-      - "AI-powered last-mile delivery: cost and speed benchmarks"
-      - "Humanoid robots in logistics: where are we really?"
+investing_basics:
+  description: "Fundamentals of investing for beginners"
+  topics:
+    - "how to start investing with 100 euros 2026"
+    - "ETF vs individual stocks which is better for beginners"
+    - "index fund investing strategy for long term wealth"
+    - "compound interest explained simply 2026"
+    - "dollar cost averaging strategy explained"
+    - "diversification investing basics why it matters"
+    - "investing mistakes beginners make and how to avoid them"
 
-  - id: ai-procurement-sourcing
-    name: "AI in Procurement and Sourcing"
-    description: "AI tools for supplier selection, contract management, spend analysis, and risk assessment"
-    seed_keywords:
-      - "AI procurement software 2025"
-      - "generative AI sourcing supplier"
-      - "AI contract management supply chain"
-      - "spend analytics AI tools"
-      - "supplier risk AI monitoring"
-    content_angles:
-      - "AI is rewriting procurement: the tools gaining traction in 2025"
-      - "Automated supplier risk monitoring with AI"
-      - "Generative AI for RFP and contract drafting"
+stock_market:
+  description: "Stock market news and strategies in plain language"
+  topics:
+    - "S&P 500 investing for beginners 2026"
+    - "how to read stock market news without being an expert"
+    - "what causes stock market crashes explained simply"
+    - "best time to invest in the stock market"
+    - "passive vs active investing which wins long term"
 
-  - id: ai-supply-chain-resilience
-    name: "AI for Supply Chain Resilience and Risk"
-    description: "AI tools for supply chain visibility, disruption prediction, geopolitical risk, and nearshoring decisions"
-    seed_keywords:
-      - "supply chain visibility AI platform"
-      - "AI disruption prediction supply chain"
-      - "digital twin supply chain"
-      - "AI geopolitical risk supply chain"
-      - "supply chain control tower AI"
-    content_angles:
-      - "How AI control towers give end-to-end supply chain visibility"
-      - "Digital twins for supply chain: current state and results"
-      - "AI and geopolitical risk: mapping exposure before it hits"
+french_accounts:
+  description: "French tax-advantaged accounts and investment vehicles"
+  topics:
+    - "PEA plan epargne actions how it works 2026"
+    - "PER plan epargne retraite tax advantages explained"
+    - "Livret A vs PEA which is better for savings"
+    - "assurance vie investing France explained simply"
+    - "best investment accounts in France for young professionals"
+    - "CTO compte titres ordinaire pros and cons France"
 
-  - id: generative-ai-operations
-    name: "Generative AI in Operations and Manufacturing"
-    description: "LLMs, foundation models, and copilots applied to manufacturing, quality control, and operations planning"
-    seed_keywords:
-      - "generative AI manufacturing 2025"
-      - "LLM operations planning"
-      - "AI quality control computer vision"
-      - "copilot ERP SAP AI"
-      - "foundation models industrial AI"
-    content_angles:
-      - "Generative AI copilots for ERP: what's shipping vs. what's promised"
-      - "AI quality control on the factory floor: real results"
-      - "Foundation models in manufacturing: the 2025 landscape"
+personal_finance:
+  description: "Day-to-day money management and financial habits"
+  topics:
+    - "how to build an emergency fund step by step"
+    - "50 30 20 budget rule explained"
+    - "how to stop living paycheck to paycheck"
+    - "best money habits to build in your 30s"
+    - "how to save money every month practical tips"
+    - "common money mistakes people make in their 20s"
+
+real_estate:
+  description: "Real estate investment basics"
+  topics:
+    - "SCPI real estate investment France explained for beginners"
+    - "buy vs rent in France which makes more sense 2026"
+    - "how to invest in real estate with little money"
+    - "LMNP regime fiscal expatries France explained"
+    - "SCI vs LMNP which structure is better in France"
+
+retirement:
+  description: "Retirement planning and long-term wealth building"
+  topics:
+    - "how much should you save for retirement in your 30s"
+    - "retirement planning basics for expats in France"
+    - "pension system France explained for foreigners"
+    - "fire movement financial independence retire early basics"
+    - "how to build passive income streams"
+
+taxes_and_fees:
+  description: "Investment taxes, fees, and how they erode returns"
+  topics:
+    - "how investment fees destroy your returns over time"
+    - "capital gains tax investing France explained simply"
+    - "flat tax prelevement forfaitaire unique France 2026"
+    - "how to minimize taxes on investments France legally"
+    - "hidden fees to watch out for when investing"
+
+ai_and_fintech:
+  description: "AI tools and fintech for personal finance"
+  topics:
+    - "best AI tools for personal finance management 2026"
+    - "robo advisors vs human financial advisors which is better"
+    - "fintech apps that help you invest automatically"
+    - "how AI is changing personal finance 2026"

@@ -2,19 +2,19 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ContentBrief",
   "type": "object",
-  "required": ["topic", "slug", "angle", "target_keywords", "hooks", "linkedin_angle", "infographic_concept"],
+  "required": ["topic", "slug", "angle", "target_keywords", "hooks", "story_format", "story_structure"],
   "properties": {
     "topic": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
     "angle": {
       "type": "string",
-      "description": "The unique narrative angle: what insight does this give supply chain professionals that they haven't heard before?"
+      "description": "The unique narrative angle: what insight does this give the audience they haven't seen framed this way before?"
     },
     "target_audience": { "type": "string" },
     "pain_points": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Specific operational challenges this content addresses"
+      "description": "Emotional or practical frustrations this content addresses"
     },
     "target_keywords": {
       "type": "array",
@@ -24,29 +24,34 @@
     "tone": { "type": "string" },
     "hooks": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 2,
       "items": { "type": "string" },
-      "description": "2-3 opening line options that would stop a supply chain professional scrolling LinkedIn"
+      "description": "2-3 hook options that would stop someone scrolling Instagram — emotionally resonant, curious, relatable"
     },
-    "linkedin_angle": {
+    "instagram_angle": {
       "type": "string",
-      "description": "The specific framing for LinkedIn: data-driven, contrarian, or practitioner story"
+      "description": "The Instagram-specific framing: what emotional journey does the viewer go through?"
     },
-    "linkedin_structure": {
+    "story_format": {
+      "type": "string",
+      "enum": ["steps", "top5"],
+      "description": "steps = 4 slides (intro + 3 steps); top5 = 6 slides (intro + top 5 items)"
+    },
+    "story_structure": {
       "type": "object",
-      "description": "Recommended structure for the LinkedIn post",
+      "description": "Outline of what each story slide communicates",
       "properties": {
-        "hook": { "type": "string" },
-        "body_points": {
-          "type": "array",
-          "items": { "type": "string" }
+        "intro": {
+          "type": "string",
+          "description": "What the intro slide communicates — the hook and the promise"
         },
-        "call_to_action": { "type": "string" }
-      }
-    },
-    "infographic_concept": {
-      "type": "string",
-      "description": "What the infographic should visualize: the key data, comparison, process, or insight to render visually"
+        "slides": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "One-sentence description of what each subsequent slide covers (3 for steps, 5 for top5)"
+        }
+      },
+      "required": ["intro", "slides"]
     }
   }
 }
