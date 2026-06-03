@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ReviewOutput",
   "type": "object",
-  "required": ["topic", "slug", "approved", "overall_score", "publish_ready", "linkedin_post", "infographic_prompt"],
+  "required": ["topic", "slug", "approved", "overall_score", "publish_ready", "blog_post", "story_plan"],
   "properties": {
     "topic": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
@@ -16,21 +16,61 @@
       "type": "array",
       "items": { "type": "string" }
     },
-    "linkedin_post": {
+    "blog_post": {
       "type": "object",
-      "required": ["text"],
+      "required": ["title", "text"],
       "properties": {
+        "title": {
+          "type": "string",
+          "description": "Compelling headline for the blog post, max 12 words"
+        },
         "text": {
           "type": "string",
-          "maxLength": 3000,
-          "description": "Full LinkedIn post ready to copy-paste, including line breaks, emojis, and hashtags"
+          "description": "Full blog post, 500-750 words, conversational and script-ready"
         },
-        "call_to_action": { "type": "string" }
+        "script_notes": {
+          "type": "string",
+          "description": "2-3 tips for reading this aloud on camera: tone, pauses, emphasis points"
+        }
       }
     },
-    "infographic_prompt": {
-      "type": "string",
-      "description": "Detailed, ready-to-use text prompt for an AI image generator to create a professional supply chain / AI infographic"
+    "story_plan": {
+      "type": "object",
+      "required": ["format", "slides"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["steps", "top5"]
+        },
+        "slides": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": ["slide_number", "role", "headline", "body", "visual_concept"],
+            "properties": {
+              "slide_number": { "type": "integer" },
+              "role": {
+                "type": "string",
+                "enum": ["intro", "step_1", "step_2", "step_3", "top_5", "top_4", "top_3", "top_2", "top_1"]
+              },
+              "headline": {
+                "type": "string",
+                "description": "Max 6 words, bold and punchy"
+              },
+              "body": {
+                "type": "string",
+                "description": "Max 20 words, clear and simple — readable in 3 seconds"
+              },
+              "visual_concept": {
+                "type": "string",
+                "description": "What icon, image, or visual element to show on this slide"
+              }
+            }
+          }
+        }
+      }
     },
     "publish_ready": { "type": "boolean" }
   }

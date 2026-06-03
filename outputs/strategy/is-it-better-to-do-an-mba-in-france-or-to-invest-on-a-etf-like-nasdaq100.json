@@ -1,35 +1,36 @@
 {
   "pain_points": [
-    "Career advancement uncertainty",
-    "Maximizing personal financial return on investment",
-    "Evaluating educational vs. financial market opportunities"
+    "Feeling overwhelmed by major financial decisions",
+    "Uncertainty about the best way to grow wealth",
+    "Fear of making the wrong choice with significant financial implications"
   ],
-  "topic": "Is it better to do an MBA in France or to invest on a ETF like NASDAQ100?",
-  "linkedin_angle": "Data-driven comparison focused on financial ROI and career investment for supply chain professionals.",
-  "slug": "is-it-better-to-do-an-mba-in-france-or-to-invest-on-a-etf-like-nasdaq100",
-  "angle": "For supply chain professionals, the debate between an MBA in France and investing in a NASDAQ-100 ETF boils down to a stark ROI comparison: while an MBA offers potential career acceleration, historical NASDAQ-100 ETF returns (averaging 20%+ in recent years) often present a more direct and potentially higher financial upside with significantly lower barriers to entry.",
-  "linkedin_structure": {
-    "hook": "MBA in France vs. NASDAQ 100 ETF: Where does your career investment truly pay off?",
-    "body_points": [
-      "While an MBA in France promises career acceleration and strategic skills (factoring in tuition, living costs, and forgone income), its ROI is complex.",
-      "Historically, the NASDAQ-100 ETF has delivered robust returns, averaging over 20% in recent years (2024, 2025), with expense ratios as low as 0.20%.",
-      "The decision hinges on your risk tolerance and career goals: an MBA offers potential for higher-level roles, but ETFs provide a more direct, data-backed financial growth path with less upfront investment and time commitment."
-    ],
-    "call_to_action": "Which investment strategy makes more sense for your long-term career and financial goals? Share your thoughts below!"
-  },
-  "tone": "Analytical and direct",
-  "target_audience": "Supply chain directors, operations managers, procurement leads, logistics VPs, and SCM consultants",
   "target_keywords": [
-    "MBA France ROI",
-    "NASDAQ 100 ETF",
-    "Supply Chain Career Investment",
-    "Financial Growth Strategy",
-    "ETF vs MBA"
+    "MBA ROI France",
+    "NASDAQ 100 ETF investment",
+    "France MBA cost",
+    "NASDAQ 100 historical returns",
+    "MBA vs ETF"
   ],
-  "infographic_concept": "A side-by-side comparison table visually contrasting the key financial metrics of pursuing an MBA in France (e.g., estimated costs, average salary increase, time to ROI) versus investing in a NASDAQ-100 ETF (e.g., historical average returns, expense ratios, potential growth).",
+  "slug": "is-it-better-to-do-an-mba-in-france-or-to-invest-on-a-etf-like-nasdaq100",
   "hooks": [
-    "MBA or NASDAQ ETF: Which pays off more?",
-    "France MBA vs. NASDAQ ETF: The ROI debate.",
-    "Your career investment: MBA or ETF?"
-  ]
+    "MBA in France or NASDAQ ETF: Which is the *smarter* financial move?",
+    "€50k for an MBA vs. investing in tech stocks: Here's how to decide.",
+    "Don't make this HUGE financial decision without knowing this."
+  ],
+  "story_format": "top5",
+  "tone": "Informative, balanced, and empowering, with a visually engaging and modern aesthetic.",
+  "topic": "Is it better to do an MBA in France or to invest on a ETF like NASDAQ100?",
+  "story_structure": {
+    "intro": "MBA in France vs. NASDAQ 100 ETF: A Financial Showdown!",
+    "slides": [
+      "MBA in France: The Promise of Career Acceleration (and its Price Tag)",
+      "NASDAQ 100 ETF: The Power of Passive Growth (and its Risks)",
+      "Crunching the Numbers: How MBA ROI Stacks Up vs. ETF Returns",
+      "The Hidden Costs: What an MBA and ETFs *really* cost you",
+      "The Verdict: Which path offers a better financial future?"
+    ]
+  },
+  "target_audience": "Young adults and professionals (22-45) curious about personal finance but often intimidated by complex financial decisions.",
+  "angle": "Choosing between an MBA in France and investing in a NASDAQ 100 ETF involves weighing potential career acceleration against market growth, with the ",
+  "instagram_angle": "This story takes the viewer from a place of financial indecision and overwhelm (\"Which path is better?\") through a clear, data-driven comparison of two major life decisions, ending with a sense of empowered clarity and actionable insight."
 }

@@ -1,26 +1,44 @@
 pipeline:
   language: english
-  target_audience: "supply chain professionals, operations managers, and logistics leaders interested in AI"
-  content_tone: "insightful, forward-looking, and practical"
+  target_audience: "young adults and professionals (22-45) curious about personal finance and investing"
+  content_tone: "warm, simple, empowering — like a knowledgeable friend, not a textbook"
 
 content:
-  linkedin:
-    max_chars: 3000
-    recommended_chars: 1500
-    include_emoji: true
-    line_break_after_hook: true
+  blog_post:
+    min_words: 500
+    max_words: 750
+    include_emoji: false
+  instagram_stories:
+    formats:
+      steps:
+        total_slides: 4
+        slide_roles: ["intro", "step_1", "step_2", "step_3"]
+      top5:
+        total_slides: 6
+        slide_roles: ["intro", "top_5", "top_4", "top_3", "top_2", "top_1"]
+    headline_max_words: 6
+    body_max_words: 20
+    canvas: "1080x1920px"
+    color_navy: "#1a2744"
+    color_gold: "#c9a84c"
+    color_white: "#ffffff"
+    color_cream: "#f7f5f0"
+    font_headline: "Montserrat Bold"
+    font_body: "Lato Regular"
 
 research:
   max_sources: 10
   max_search_queries: 5
   preferred_source_languages: ["en"]
-  preferred_source_types: ["news", "research", "company-announcement", "analyst-report"]
+  preferred_source_types: ["news", "research", "educational", "analyst-report"]
   focus_areas:
-    - "AI model releases and capabilities"
-    - "AI applied to supply chain and logistics"
-    - "automation and robotics in operations"
-    - "demand forecasting and inventory optimization"
-    - "generative AI for procurement and sourcing"
+    - "investing basics and strategies for beginners"
+    - "personal finance tips and money management"
+    - "tax-advantaged accounts and retirement savings"
+    - "ETFs, index funds, and stock market fundamentals"
+    - "real estate investment and passive income"
+    - "common investing mistakes and how to avoid them"
+    - "financial news and market updates in plain language"
 
 output_dirs:
   research: outputs/research

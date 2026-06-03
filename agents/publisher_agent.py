@@ -1,13 +1,13 @@
 """
-Local publisher agent — saves approved content as local files.
+Local publisher agent — saves approved content and generates Instagram story prompts.
 Reads:   outputs/approved/<slug>_reviewed.json
-Writes:  outputs/published/<slug>/linkedin_post.txt
-         outputs/published/<slug>/infographic_diagram_prompt.txt
+Writes:  outputs/published/<slug>/blog_post.txt
+         outputs/published/<slug>/instagram_stories_prompts.txt
          outputs/published/<slug>_published.json
 
 Usage:
     python -m agents.publisher_agent <slug>
-    python agents/publisher_agent.py ai-demand-forecasting-supply-chain-2026
+    python agents/publisher_agent.py how-to-start-investing-2026
 """
 
 import os
@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-from utils.file_helpers import load_json, save_json
+from utils.file_helpers import load_json, load_markdown, save_json
 from utils.logger import error, info, success
 
 load_dotenv()
@@ -35,42 +35,39 @@ gemini_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-def _build_diagram_prompt(reviewed: dict) -> str:
-    """Call Gemini to expand the raw infographic concept into a full designer brief."""
+def _generate_story_prompts(reviewed: dict) -> str:
+    """Call Gemini to generate one complete image prompt per story slide."""
     topic = reviewed.get("topic", "")
-    linkedin_text = reviewed.get("linkedin_post", {}).get("text", "")
-    raw_prompt = reviewed.get("infographic_prompt", "")
+    story_plan = reviewed.get("story_plan", {})
+    story_format = story_plan.get("format", "steps")
+    slides = story_plan.get("slides", [])
+    total = len(slides)
 
-    system = (
-        "You are a senior information designer specialising in B2B supply chain and enterprise AI content. "
-        "Given a LinkedIn post and a raw infographic concept, produce a complete, professional infographic design brief "
-        "that a graphic designer or AI image tool (FLUX, Midjourney) can execute without any additional input.\n\n"
-        "The brief must include:\n"
-        "- **Diagram Type** — e.g. comparison table, process flow, bar chart, before/after split, timeline\n"
-        "- **Overall Layout** — section arrangement, reading direction, hierarchy\n"
-        "- **Visual Style** — flat vector, minimalist, corporate; no cartoons\n"
-        "- **Color Palette** — Navy blue #1a2744 for backgrounds and titles; Gold #c9a84c for highlights, "
-        "key stats, callouts; White for text on dark; Light grey for secondary elements\n"
-        "- **Typography** — modern sans-serif, clear hierarchy (title / subtitle / body / callout)\n"
-        "- **Section-by-section content** — for every section: section title, every data point or statistic "
-        "to display with exact labels and values, icons or visuals to use, any callout boxes\n"
-        "- **General design elements** — flow indicators, iconography style, background treatment, accent usage\n\n"
-        "Use markdown headers and bullet points for structure. Be precise and exhaustive — every number, "
-        "label, and visual element must be named. Write it as a direct brief to the designer, not a description."
-    )
+    publisher_prompt = load_markdown(ROOT / "prompts" / "publisher_prompt.md")
 
-    user = (
-        f"Topic: {topic}\n\n"
-        f"LinkedIn post:\n{linkedin_text}\n\n"
-        f"Raw infographic concept:\n{raw_prompt}"
+    slides_json = "\n".join([
+        f"Slide {s['slide_number']} of {total} ({s['role'].upper()})\n"
+        f"  Headline: {s['headline']}\n"
+        f"  Body: {s['body']}\n"
+        f"  Visual concept: {s['visual_concept']}"
+        for s in slides
+    ])
+
+    user_message = (
+        f"Topic: {topic}\n"
+        f"Story format: {story_format} ({total} slides total)\n\n"
+        f"Story plan:\n{slides_json}\n\n"
+        "Generate a complete, professional image prompt for EACH slide. "
+        "Follow all design specs in your system prompt exactly. "
+        "Use the exact headline and body text from the story plan verbatim."
     )
 
     response = gemini_client.models.generate_content(
         model=TEXT_MODEL,
-        contents=user,
+        contents=user_message,
         config=types.GenerateContentConfig(
-            system_instruction=system,
-            max_output_tokens=3000,
+            system_instruction=publisher_prompt,
+            max_output_tokens=4000,
         ),
     )
     return response.text.strip()
@@ -96,38 +93,52 @@ def run(slug: str) -> Path:
     out_dir = ROOT / "outputs" / "published" / slug
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    story_plan = reviewed.get("story_plan", {})
+    story_format = story_plan.get("format", "?")
+    n_slides = len(story_plan.get("slides", []))
+
     result: dict = {
         "topic": topic,
         "slug": slug,
         "published_at": datetime.now(timezone.utc).isoformat(),
         "output_folder": str(out_dir),
-        "linkedin": {},
-        "infographic": {},
+        "story_format": story_format,
+        "n_slides": n_slides,
+        "blog_post": {},
+        "instagram_stories": {},
     }
 
-    # LinkedIn post
-    linkedin_text = reviewed["linkedin_post"]["text"]
-    li_path = out_dir / "linkedin_post.txt"
-    li_path.write_text(linkedin_text, encoding="utf-8")
-    result["linkedin"] = {"status": "saved", "file": str(li_path)}
-    success(AGENT, f"LinkedIn post saved ->{li_path.name}")
+    # Blog post
+    blog = reviewed.get("blog_post", {})
+    blog_title = blog.get("title", "")
+    blog_text = blog.get("text", "")
+    script_notes = blog.get("script_notes", "")
 
-    # Infographic diagram prompt — Gemini expands the raw concept into a full design brief
-    info(AGENT, "Generating detailed infographic design brief via Gemini…")
-    diagram_prompt = _build_diagram_prompt(reviewed)
-    dp_path = out_dir / "infographic_diagram_prompt.txt"
-    dp_path.write_text(diagram_prompt, encoding="utf-8")
-    result["infographic"] = {"status": "saved", "file": str(dp_path)}
-    success(AGENT, f"Infographic diagram prompt saved ->{dp_path.name}")
+    blog_content = f"{blog_title}\n{'='*len(blog_title)}\n\n{blog_text}"
+    if script_notes:
+        blog_content += f"\n\n---\nSCRIPT NOTES (for camera recording):\n{script_notes}"
+
+    blog_path = out_dir / "blog_post.txt"
+    blog_path.write_text(blog_content, encoding="utf-8")
+    result["blog_post"] = {"status": "saved", "file": str(blog_path)}
+    success(AGENT, f"Blog post saved -> {blog_path.name}")
+
+    # Instagram story prompts — one full image prompt per slide
+    info(AGENT, f"Generating {n_slides} Instagram story prompts via Gemini ({story_format} format)...")
+    story_prompts = _generate_story_prompts(reviewed)
+    stories_path = out_dir / "instagram_stories_prompts.txt"
+    stories_path.write_text(story_prompts, encoding="utf-8")
+    result["instagram_stories"] = {"status": "saved", "file": str(stories_path), "slides": n_slides}
+    success(AGENT, f"Instagram story prompts saved -> {stories_path.name}")
 
     # Log
     log_path = ROOT / "outputs" / "published" / f"{slug}_published.json"
     save_json(result, log_path)
-    success(AGENT, f"Log saved ->{log_path.name}")
+    success(AGENT, f"Log saved -> {log_path.name}")
 
     info(AGENT, f"Done. Files written to: {out_dir}")
-    info(AGENT, "  ->Copy linkedin_post.txt to post manually on LinkedIn")
-    info(AGENT, "  ->Use infographic_diagram_prompt.txt with FLUX, Midjourney, or your designer")
+    info(AGENT, f"  -> Use blog_post.txt as your video script or blog content")
+    info(AGENT, f"  -> Use instagram_stories_prompts.txt to generate {n_slides} story images")
 
     return log_path
 
