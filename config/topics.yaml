@@ -1,70 +1,70 @@
 topics:
-  - id: french-taxation
-    name: "French Taxation for Foreigners"
-    description: "Taxes, declarations, social contributions, and tax treaties for expats"
+  - id: ai-supply-chain-optimization
+    name: "AI for Supply Chain Optimization"
+    description: "Machine learning and AI tools for demand forecasting, inventory management, and network optimization"
     seed_keywords:
-      - "impôts France expatriés"
-      - "French tax declaration expat"
-      - "cotisations sociales France foreigners"
-      - "tax treaty France double taxation"
-      - "income tax France non-resident"
+      - "AI demand forecasting supply chain 2025"
+      - "machine learning inventory optimization"
+      - "generative AI supply chain planning"
+      - "AI supply chain disruption prediction"
+      - "LLM procurement automation"
     content_angles:
-      - "How to file your first French tax declaration"
-      - "Understanding French social contributions as a foreign worker"
-      - "Double taxation treaties: protecting your income in France"
+      - "How AI is transforming demand forecasting accuracy in 2025"
+      - "From reactive to predictive: AI-driven inventory management"
+      - "GPT models in procurement: use cases and ROI"
 
-  - id: real-estate-investment
-    name: "Real Estate Investment in France"
-    description: "SCI, LMNP, furnished rentals, and property investment strategies"
+  - id: ai-logistics-automation
+    name: "AI in Logistics and Warehouse Automation"
+    description: "Robotics, computer vision, and AI for warehouse operations, last-mile delivery, and freight"
     seed_keywords:
-      - "SCI société civile immobilière expatriés"
-      - "LMNP loueur meublé non professionnel"
-      - "investissement locatif France étranger"
-      - "SCI vs LMNP comparison"
-      - "furnished rental income tax France"
+      - "warehouse robotics AI 2025"
+      - "autonomous vehicles logistics"
+      - "computer vision warehouse picking"
+      - "AI route optimization last mile"
+      - "humanoid robots warehouse"
     content_angles:
-      - "SCI vs LMNP: which structure is right for expats?"
-      - "How to invest in French real estate as a foreigner"
-      - "LMNP explained: tax benefits for furnished rentals"
+      - "The rise of autonomous warehouses: what's real and what's hype"
+      - "AI-powered last-mile delivery: cost and speed benchmarks"
+      - "Humanoid robots in logistics: where are we really?"
 
-  - id: savings-investment
-    name: "Savings and Investment Products in France"
-    description: "PEA, Assurance-vie, Livret A, and investment accounts for expats"
+  - id: ai-procurement-sourcing
+    name: "AI in Procurement and Sourcing"
+    description: "AI tools for supplier selection, contract management, spend analysis, and risk assessment"
     seed_keywords:
-      - "PEA plan epargne actions foreigners"
-      - "assurance-vie expat France"
-      - "Livret A eligibility foreigners"
-      - "investment accounts France non-resident"
-      - "bourse France expat broker"
+      - "AI procurement software 2025"
+      - "generative AI sourcing supplier"
+      - "AI contract management supply chain"
+      - "spend analytics AI tools"
+      - "supplier risk AI monitoring"
     content_angles:
-      - "Can you open a PEA as a foreigner in France?"
-      - "Assurance-vie for expats: the complete guide"
-      - "Best investment accounts for foreigners living in France"
+      - "AI is rewriting procurement: the tools gaining traction in 2025"
+      - "Automated supplier risk monitoring with AI"
+      - "Generative AI for RFP and contract drafting"
 
-  - id: cross-border-finance
-    name: "Cross-Border Finance"
-    description: "International money transfers, multi-currency accounts, and cross-border money management"
+  - id: ai-supply-chain-resilience
+    name: "AI for Supply Chain Resilience and Risk"
+    description: "AI tools for supply chain visibility, disruption prediction, geopolitical risk, and nearshoring decisions"
     seed_keywords:
-      - "Wise Revolut France expat"
-      - "international money transfer France"
-      - "multi-currency account France"
-      - "sending money abroad from France tax"
-      - "cross-border banking expat"
+      - "supply chain visibility AI platform"
+      - "AI disruption prediction supply chain"
+      - "digital twin supply chain"
+      - "AI geopolitical risk supply chain"
+      - "supply chain control tower AI"
     content_angles:
-      - "Best apps for sending money internationally from France"
-      - "How to manage money across multiple countries as an expat"
-      - "Wise vs Revolut vs traditional bank for expats in France"
+      - "How AI control towers give end-to-end supply chain visibility"
+      - "Digital twins for supply chain: current state and results"
+      - "AI and geopolitical risk: mapping exposure before it hits"
 
-  - id: practical-finance
-    name: "Practical Financial Life in France"
-    description: "Banking, credit, insurance, CAF benefits, and healthcare for foreigners"
+  - id: generative-ai-operations
+    name: "Generative AI in Operations and Manufacturing"
+    description: "LLMs, foundation models, and copilots applied to manufacturing, quality control, and operations planning"
     seed_keywords:
-      - "open bank account France foreigner"
-      - "CAF allocations familles expat"
-      - "health insurance France expat"
-      - "credit score France foreigner"
-      - "French pension system expat"
+      - "generative AI manufacturing 2025"
+      - "LLM operations planning"
+      - "AI quality control computer vision"
+      - "copilot ERP SAP AI"
+      - "foundation models industrial AI"
     content_angles:
-      - "How to open a bank account in France as a foreigner"
-      - "CAF benefits: what expats are entitled to in France"
-      - "Understanding French health insurance as an expat"
+      - "Generative AI copilots for ERP: what's shipping vs. what's promised"
+      - "AI quality control on the factory floor: real results"
+      - "Foundation models in manufacturing: the 2025 landscape"

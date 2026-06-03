@@ -2,50 +2,51 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ContentBrief",
   "type": "object",
-  "required": ["topic", "slug", "angle", "target_keywords", "formats", "blog_outline"],
+  "required": ["topic", "slug", "angle", "target_keywords", "hooks", "linkedin_angle", "infographic_concept"],
   "properties": {
     "topic": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-    "angle": { "type": "string", "description": "The unique narrative angle for this content piece" },
+    "angle": {
+      "type": "string",
+      "description": "The unique narrative angle: what insight does this give supply chain professionals that they haven't heard before?"
+    },
     "target_audience": { "type": "string" },
     "pain_points": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": { "type": "string" },
+      "description": "Specific operational challenges this content addresses"
     },
     "target_keywords": {
       "type": "array",
       "minItems": 1,
       "items": { "type": "string" }
     },
-    "secondary_keywords": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "formats": {
-      "type": "array",
-      "items": { "type": "string", "enum": ["blog", "linkedin", "instagram"] }
-    },
     "tone": { "type": "string" },
     "hooks": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string" }
+      "items": { "type": "string" },
+      "description": "2-3 opening line options that would stop a supply chain professional scrolling LinkedIn"
     },
-    "blog_outline": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "section": { "type": "string" },
-          "key_points": {
-            "type": "array",
-            "items": { "type": "string" }
-          }
-        }
+    "linkedin_angle": {
+      "type": "string",
+      "description": "The specific framing for LinkedIn: data-driven, contrarian, or practitioner story"
+    },
+    "linkedin_structure": {
+      "type": "object",
+      "description": "Recommended structure for the LinkedIn post",
+      "properties": {
+        "hook": { "type": "string" },
+        "body_points": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "call_to_action": { "type": "string" }
       }
     },
-    "word_count_blog": { "type": "integer", "minimum": 1000 },
-    "linkedin_angle": { "type": "string" },
-    "instagram_visual_concept": { "type": "string" }
+    "infographic_concept": {
+      "type": "string",
+      "description": "What the infographic should visualize: the key data, comparison, process, or insight to render visually"
+    }
   }
 }

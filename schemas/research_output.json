@@ -28,22 +28,28 @@
     "key_facts": {
       "type": "array",
       "minItems": 3,
-      "items": { "type": "string" }
+      "items": { "type": "string" },
+      "description": "Core factual findings: capabilities, benchmarks, deployment results, adoption rates"
     },
-    "relevant_laws": {
+    "key_developments": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "description": { "type": "string" },
-          "url": { "type": "string" }
-        }
-      }
+      "items": { "type": "string" },
+      "description": "Recent launches, model releases, partnerships, or research breakthroughs in AI"
+    },
+    "companies_mentioned": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "AI vendors, supply chain software providers, and enterprise adopters named in sources"
+    },
+    "supply_chain_applications": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Specific supply chain use cases where AI is being applied: demand forecasting, warehouse automation, etc."
     },
     "statistics": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": { "type": "string" },
+      "description": "Quantified data points: ROI figures, accuracy improvements, cost reductions, adoption percentages"
     },
     "expert_quotes": {
       "type": "array",

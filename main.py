@@ -1,9 +1,14 @@
 """
-Main orchestrator — runs the full 5-agent pipeline for a given topic.
+Main orchestrator — runs the full 4-agent pipeline for a given AI / supply chain topic.
 
 Usage:
-    python main.py "LMNP regime fiscal expatriés"
-    python main.py "ouvrir un compte bancaire en France expatrié"
+    python main.py "AI demand forecasting supply chain 2025"
+    python main.py "generative AI warehouse automation latest news"
+    python main.py "LLM procurement sourcing tools 2025"
+
+Output per run (inside outputs/published/<slug>/):
+    linkedin_post.txt      — ready to copy-paste into LinkedIn
+    infographic_prompt.txt — design brief for an AI image generator or designer
 """
 
 import sys
@@ -48,13 +53,15 @@ def run_pipeline(topic: str) -> None:
             sys.exit(1)
 
     print("\n" + "=" * 60)
-    success("pipeline", "All 5 agents completed. Check outputs/published/")
+    success("pipeline", f"Pipeline complete. Files saved to: outputs/published/{slug}/")
+    info("pipeline", "  linkedin_post.txt      → paste into LinkedIn")
+    info("pipeline", "  infographic_prompt.txt → paste into FLUX / Midjourney / designer")
     print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print('Usage: python main.py "Your topic here"')
+        print('Usage: python main.py "Your AI / supply chain topic here"')
         sys.exit(1)
 
     run_pipeline(" ".join(sys.argv[1:]))

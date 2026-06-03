@@ -1,7 +1,13 @@
 """
 Local publisher agent — saves approved content as local files.
 Reads:   outputs/approved/<slug>_reviewed.json
-Writes:  outputs/published/<slug>/
+Writes:  outputs/published/<slug>/linkedin_post.txt
+         outputs/published/<slug>/infographic_prompt.txt
+         outputs/published/<slug>_published.json
+
+Usage:
+    python -m agents.publisher_agent <slug>
+    python agents/publisher_agent.py ai-demand-forecasting-supply-chain-2025
 """
 
 import os
@@ -19,8 +25,6 @@ from google.genai import types
 
 from utils.file_helpers import load_json, save_json
 from utils.logger import error, info, success, warning
-
-load_dotenv(ROOT / ".env")
 
 AGENT = "publisher-agent"
 TEXT_MODEL = "gemini-2.5-flash-lite"
@@ -85,7 +89,9 @@ def run(slug: str) -> Path:
     reviewed = load_json(review_path)
 
     if not reviewed.get("publish_ready", False):
-        raise RuntimeError(f"Content is not publish_ready. Human review required: {review_path}")
+        raise RuntimeError(
+            f"Content is not publish_ready. Human review required: {review_path}"
+        )
 
     topic = reviewed.get("topic", slug)
     out_dir = ROOT / "outputs" / "published" / slug
@@ -102,7 +108,7 @@ def run(slug: str) -> Path:
         "diagram_prompt": {},
     }
 
-    # LinkedIn post text output extraction
+    # LinkedIn post
     linkedin_text = reviewed["linkedin_post"]["text"]
     li_path = out_dir / "linkedin_post.txt"
     li_path.write_text(linkedin_text, encoding="utf-8")
@@ -127,23 +133,14 @@ def run(slug: str) -> Path:
         warning(AGENT, f"Draft not found, skipping copy: {draft_path}")
         result["blog_draft"] = {"status": "skipped", "reason": "draft file not found"}
 
-    # Diagram prompt → txt
-    info(AGENT, "Building infographic diagram prompt…")
-    try:
-        diagram_prompt = _build_diagram_prompt(reviewed)
-        dp_path = out_dir / "infographic_diagram_prompt.txt"
-        dp_path.write_text(diagram_prompt, encoding="utf-8")
-        result["diagram_prompt"] = {"status": "saved", "file": str(dp_path)}
-        success(AGENT, f"Diagram prompt saved → {dp_path.name}")
-    except Exception as exc:
-        error(AGENT, f"Diagram prompt generation failed: {exc}")
-        result["diagram_prompt"] = {"status": "failed", "error": str(exc)}
-
-    # Final execution logging output compilation
+    # Log
     log_path = ROOT / "outputs" / "published" / f"{slug}_published.json"
     save_json(result, log_path)
     success(AGENT, f"Log saved → {log_path.name}")
-    success(AGENT, f"All files successfully written to: {out_dir}")
+
+    info(AGENT, f"Done. Files written to: {out_dir}")
+    info(AGENT, "  → Copy linkedin_post.txt to post manually on LinkedIn")
+    info(AGENT, "  → Use infographic_prompt.txt with FLUX, Midjourney, or your designer")
 
     return log_path
 

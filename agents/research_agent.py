@@ -1,10 +1,10 @@
 """
 Research agent — searches the web and synthesizes structured research output
-for a given personal finance topic targeting expats in France.
+for a given AI / supply chain topic.
 
 Usage:
-    python -m agents.research_agent "SCI immobilier expatriés France 2024"
-    python agents/research_agent.py "PEA pour non-résidents France"
+    python -m agents.research_agent "AI demand forecasting supply chain 2025"
+    python agents/research_agent.py "generative AI warehouse automation latest news"
 """
 
 import json
@@ -99,10 +99,11 @@ _QUERY_PARAMS = {
             "maxItems": 5,
             "items": {"type": "string"},
             "description": (
-                "3-5 search queries targeting official French government sources "
-                "(impots.gouv.fr, service-public.fr, legifrance.fr), reputable "
-                "financial media, and English-language expat resources. "
-                "Include at least one query in French and one in English."
+                "3-5 search queries targeting authoritative AI and technology news sources "
+                "(TechCrunch, VentureBeat, MIT Technology Review, The Verge, arXiv), "
+                "supply chain publications (Supply Chain Dive, Logistics Management, Gartner, McKinsey), "
+                "and company blogs (OpenAI, Google, Microsoft, NVIDIA, Blue Yonder, SAP, o9 Solutions). "
+                "Include date qualifiers like '2025' or 'latest' to surface recent developments."
             ),
         }
     },

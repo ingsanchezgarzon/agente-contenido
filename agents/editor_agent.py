@@ -1,11 +1,12 @@
 """
-Editor agent — reviews and corrects blog + social posts for accuracy, SEO, and tone.
-Reads:  outputs/drafts/<slug>.md + outputs/drafts/<slug>_social.json
+Editor agent — reviews and corrects the LinkedIn post and infographic prompt for
+accuracy, authority, clarity, and engagement.
+Reads:  outputs/drafts/<slug>_social.json
 Writes: outputs/approved/<slug>_reviewed.json
 
 Usage:
     python -m agents.editor_agent <slug>
-    python agents/editor_agent.py sci-immobilier-expatries-france-2024
+    python agents/editor_agent.py ai-demand-forecasting-supply-chain-2025
 """
 
 import json
@@ -58,15 +59,11 @@ def _build_review_params() -> dict:
 def run(slug: str) -> Path:
     info(AGENT, f"Starting editorial review for slug='{slug}'")
 
-    blog_path = ROOT / "outputs" / "drafts" / f"{slug}.md"
     social_path = ROOT / "outputs" / "drafts" / f"{slug}_social.json"
-    for p in (blog_path, social_path):
-        if not p.exists():
-            raise FileNotFoundError(f"Required input not found: {p}")
+    if not social_path.exists():
+        raise FileNotFoundError(f"Required input not found: {social_path}")
 
-    blog_markdown = load_markdown(blog_path)
     social_data = load_json(social_path)
-
     system_prompt = _load_system_prompt(slug)
 
     info(AGENT, "Running editorial review with Gemini…")
@@ -74,8 +71,7 @@ def run(slug: str) -> Path:
         system_prompt=system_prompt,
         user_message=(
             f"Review and edit the following content for slug '{slug}'.\n\n"
-            f"## Blog Article\n\n{blog_markdown}\n\n"
-            f"## Social Media Posts\n\n"
+            f"## LinkedIn Post + Infographic Prompt\n\n"
             f"{json.dumps(social_data, indent=2, ensure_ascii=False)}\n\n"
             "Work through every item in the review checklist. Fix all fixable issues "
             "directly and submit the corrected content via the review tool."
@@ -83,10 +79,10 @@ def run(slug: str) -> Path:
         fn_name="submit_review",
         fn_description=(
             "Submit the editorial review results and the fully corrected, "
-            "publication-ready blog article and social posts."
+            "publication-ready LinkedIn post and infographic prompt."
         ),
         fn_parameters=_build_review_params(),
-        max_output_tokens=8192,
+        max_output_tokens=4096,
     )
 
     review["topic"] = social_data.get("topic", slug)
