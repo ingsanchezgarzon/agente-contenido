@@ -1,0 +1,76 @@
+{
+  "angle": "France is emerging as an AI powerhouse through strategic investments and a national roadmap, making it an attractive destination for AI innovation and talent.",
+  "linkedin_angle": "France's strategic push into AI, backed by the €54 billion France 2030 plan and significant private investment, positions it as a key player in the global AI landscape. Learn how this focus on innovation, talent, and sovereign tech is reshaping the nation's economic future and creating opportunities.",
+  "topic": "What is doing France to incre AI investment?",
+  "pain_points": [
+    "Expats may not be aware of France's growing AI sector and investment opportunities.",
+    "Difficulty in understanding the French government's approach to AI funding and strategy.",
+    "Uncertainty about the career prospects and business environment for AI professionals in France."
+  ],
+  "instagram_visual_concept": "Infographic showing France's AI investment figures, key AI hubs, and growth projections, with a modern, tech-focused aesthetic.",
+  "slug": "what-is-doing-france-to-incre-ai-investment",
+  "formats": [
+    "blog",
+    "linkedin",
+    "instagram"
+  ],
+  "target_keywords": [
+    "France AI investment",
+    "French AI strategy",
+    "AI startups France",
+    "France AI funding"
+  ],
+  "hooks": [
+    "France is quietly becoming an AI powerhouse. Here's how they're investing in the future.",
+    "Is France the next AI hub? Dive into their multi-billion euro strategy to find out.",
+    "From research to startups, France is making a serious play in the global AI race. Discover their investment roadmap."
+  ],
+  "blog_outline": [
+    {
+      "key_points": [
+        "Overview of France's commitment to AI",
+        "Mention of France 2030 plan as the overarching framework."
+      ],
+      "section": "Introduction: France's AI Ambition"
+    },
+    {
+      "key_points": [
+        "Details on the France 2030 plan (€54 billion) and its AI allocation (approx. €4 billion public investment).",
+        "National AI strategy phases: Phase 1 (research) and Phase 2 (innovation).",
+        "Role of Bpifrance in deploying €10 billion for AI ecosystem development."
+      ],
+      "section": "Government-backed Initiatives and Funding"
+    },
+    {
+      "key_points": [
+        "Highlighting significant private investments (e.g., Iliad's €3 billion, €109 billion private investment mentioned).",
+        "Mention of key French AI companies (Mistral AI, HuggingFace) and their funding.",
+        "Attraction of foreign AI projects (41 in 2024)."
+      ],
+      "section": "Private Sector Investment and Key Players"
+    },
+    {
+      "key_points": [
+        "France's emphasis on building a sovereign AI technology offer.",
+        "Specific focus on embedded AI, trustworthy AI, frugal AI, and generative AI.",
+        "Adaptation of strategy to generative AI developments in 2023."
+      ],
+      "section": "Focus Areas: Sovereign, Trustworthy, and Generative AI"
+    },
+    {
+      "key_points": [
+        "France's position as third globally in AI researchers.",
+        "Importance of French engineering and mathematics schools.",
+        "Attracting foreign investment and talent."
+      ],
+      "section": "Talent and Research Ecosystem"
+    },
+    {
+      "key_points": [
+        "Recap of France's strong position in AI investment and innovation.",
+        "Future outlook for AI in France."
+      ],
+      "section": "Conclusion: France's AI Trajectory"
+    }
+  ]
+}

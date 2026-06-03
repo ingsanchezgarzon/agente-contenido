@@ -49,6 +49,7 @@ def call_with_tool(
     fn_description: str,
     fn_parameters: dict,
     max_output_tokens: int = 4096,
+    model: str = MODEL,
 ) -> dict:
     """Call Gemini with forced function calling. Returns the function args as a plain dict."""
     fn_decl = types.FunctionDeclaration(
@@ -58,7 +59,7 @@ def call_with_tool(
     )
     tool = types.Tool(function_declarations=[fn_decl])
     response = client.models.generate_content(
-        model=MODEL,
+        model=model,
         contents=user_message,
         config=types.GenerateContentConfig(
             system_instruction=system_prompt,

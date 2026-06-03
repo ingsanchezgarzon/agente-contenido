@@ -22,6 +22,7 @@ from utils.gemini_helpers import call_with_tool
 from utils.logger import error, info, success, warning
 
 AGENT = "writer-agent"
+BLOG_MODEL = "gemini-2.5-flash"  # flash-lite caps at 8 192 output tokens; blog bodies exceed that
 
 
 # ── prompt ────────────────────────────────────────────────────────────────────
@@ -113,7 +114,8 @@ def _write_blog(research: dict, brief: dict) -> dict:
         fn_name="submit_blog_article",
         fn_description="Submit the complete blog article as structured fields.",
         fn_parameters=_BLOG_PARAMS,
-        max_output_tokens=8192,
+        max_output_tokens=16384,
+        model=BLOG_MODEL,
     )
 
 
