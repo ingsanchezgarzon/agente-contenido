@@ -28,7 +28,7 @@ from utils.logger import error, info, success
 load_dotenv()
 
 AGENT = "publisher-agent"
-TEXT_MODEL = "gemini-2.5-flash"
+TEXT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
 gemini_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
