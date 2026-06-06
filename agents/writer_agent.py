@@ -89,7 +89,7 @@ def _write_content(research: dict, brief: dict) -> dict:
         fn_name="submit_content",
         fn_description="Submit the blog post and Instagram story concept.",
         fn_parameters=_CONTENT_PARAMS,
-        max_output_tokens=4096,
+        max_output_tokens=8192,
     )
 
 

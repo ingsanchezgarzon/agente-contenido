@@ -1,14 +1,9 @@
 """
-Main orchestrator — runs the full 4-agent pipeline for a given AI / supply chain topic.
+Main orchestrator — runs the full 6-agent Instagram personal finance pipeline.
 
 Usage:
-    python main.py "AI demand forecasting supply chain 2025"
-    python main.py "generative AI warehouse automation latest news"
-    python main.py "LLM procurement sourcing tools 2025"
-
-Output per run (inside outputs/published/<slug>/):
-    linkedin_post.txt      — ready to copy-paste into LinkedIn
-    infographic_prompt.txt — design brief for an AI image generator or designer
+    python main.py                              # prompts for topic interactively
+    python main.py "how to start investing 2026"  # topic as CLI argument
 """
 
 import sys
@@ -20,6 +15,7 @@ sys.path.insert(0, str(ROOT))
 from utils.file_helpers import slugify
 from utils.logger import error, info, success
 
+import agents.designer_agent
 import agents.editor_agent
 import agents.publisher_agent
 import agents.research_agent
@@ -36,11 +32,12 @@ def run_pipeline(topic: str) -> None:
     print("=" * 60 + "\n")
 
     steps = [
-        ("1/5 Research",   lambda: agents.research_agent.run(topic)),
-        ("2/5 Strategy",   lambda: agents.strategist_agent.run(slug)),
-        ("3/5 Writing",    lambda: agents.writer_agent.run(slug)),
-        ("4/5 Editing",    lambda: agents.editor_agent.run(slug)),
-        ("5/5 Publishing", lambda: agents.publisher_agent.run(slug)),
+        ("1/6 Research",   lambda: agents.research_agent.run(topic)),
+        ("2/6 Strategy",   lambda: agents.strategist_agent.run(slug)),
+        ("3/6 Writing",    lambda: agents.writer_agent.run(slug)),
+        ("4/6 Editing",    lambda: agents.editor_agent.run(slug)),
+        ("5/6 Publishing", lambda: agents.publisher_agent.run(slug)),
+        ("6/6 Design",     lambda: agents.designer_agent.run(slug)),
     ]
 
     for label, step in steps:
@@ -54,14 +51,28 @@ def run_pipeline(topic: str) -> None:
 
     print("\n" + "=" * 60)
     success("pipeline", f"Pipeline complete. Files saved to: outputs/published/{slug}/")
-    info("pipeline", "  linkedin_post.txt      → paste into LinkedIn")
-    info("pipeline", "  infographic_prompt.txt → paste into FLUX / Midjourney / designer")
+    info("pipeline", "  blog_post.txt                → script for video recording")
+    info("pipeline", "  instagram_stories_prompts.txt → image prompts reference")
+    info("pipeline", "  slide_1.png ... slide_N.png  → ready-to-post Instagram stories")
     print("=" * 60 + "\n")
 
+#python main.py "how to start investing with 100 euros 2026"
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print('Usage: python main.py "Your AI / supply chain topic here"')
-        sys.exit(1)
+    if len(sys.argv) > 1:
+        topic = " ".join(sys.argv[1:])
+    else:
+        print("\n" + "=" * 60)
+        print("  Instagram Personal Finance Pipeline")
+        print("=" * 60)
+        print("Examples:")
+        print("  - how to start investing with 100 euros 2026")
+        print("  - best ETFs for beginners 2026")
+        print("  - common money mistakes to avoid in your 30s")
+        print("-" * 60)
+        topic = input("Enter topic: ").strip()
+        if not topic:
+            print("No topic provided. Exiting.")
+            sys.exit(1)
 
-    run_pipeline(" ".join(sys.argv[1:]))
+    run_pipeline(topic)

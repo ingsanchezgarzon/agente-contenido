@@ -32,7 +32,7 @@ AGENT = "research-agent"
 
 # Initialize the official Google GenAI client
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-MODEL = "gemini-2.5-flash-lite"
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
 
 # ── schema helper ─────────────────────────────────────────────────────────────
@@ -77,7 +77,11 @@ def _make_tool(name: str, description: str, parameters: dict) -> types.Tool:
 
 def _extract_args(response) -> dict:
     """Pull the function call args out of a Gemini response."""
-    fn_call = response.candidates[0].content.parts[0].function_call
+    candidate = response.candidates[0]
+    if candidate.content is None:
+        reason = getattr(candidate, "finish_reason", "unknown")
+        raise RuntimeError(f"Model returned empty content (finish_reason={reason}). Check model availability or API quota.")
+    fn_call = candidate.content.parts[0].function_call
     return dict(fn_call.args)
 
 
