@@ -1,28 +1,37 @@
 """
-Editor agent — reviews and corrects the LinkedIn post and infographic prompt for
+Editor agent — reviews and corrects the blog post and story concept for
 accuracy, authority, clarity, and engagement.
 Reads:  outputs/drafts/<slug>_social.json
 Writes: outputs/approved/<slug>_reviewed.json
 
+Uses Claude Haiku via the Anthropic API (API_Claude key in .env).
+
 Usage:
     python -m agents.editor_agent <slug>
-    python agents/editor_agent.py ai-demand-forecasting-supply-chain-2025
+    python agents/editor_agent.py how-to-start-investing-2026
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
+import anthropic
+from dotenv import load_dotenv
 from jinja2 import BaseLoader, Environment
+
+load_dotenv()
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from utils.file_helpers import load_json, load_markdown, save_json, validate_json
-from utils.gemini_helpers import call_with_tool
 from utils.logger import error, info, success, warning
 
 AGENT = "editor-agent"
+MODEL = "claude-haiku-4-5"
+
+client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
 
 
 # ── prompt ────────────────────────────────────────────────────────────────────
@@ -38,7 +47,7 @@ def _load_system_prompt(slug: str) -> str:
     return _render_prompt(template_text, slug=slug)
 
 
-# ── tool ──────────────────────────────────────────────────────────────────────
+# ── tool schema ───────────────────────────────────────────────────────────────
 
 def _build_review_params() -> dict:
     schema = load_json(ROOT / "schemas" / "review_output.json")
@@ -54,6 +63,37 @@ def _build_review_params() -> dict:
     }
 
 
+# ── main review function ──────────────────────────────────────────────────────
+
+def _run_review(system_prompt: str, user_message: str) -> dict:
+    params = _build_review_params()
+    tool = {
+        "name": "submit_review",
+        "description": (
+            "Submit the editorial review results, the corrected blog post, "
+            "and the complete Instagram story plan with one slide object per story slide."
+        ),
+        "input_schema": params,
+    }
+
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=6144,
+        system=system_prompt,
+        tools=[tool],
+        tool_choice={"type": "tool", "name": "submit_review"},
+        messages=[{"role": "user", "content": user_message}],
+    )
+
+    for block in response.content:
+        if block.type == "tool_use" and block.name == "submit_review":
+            return block.input
+
+    raise RuntimeError(
+        f"Claude Haiku did not return a tool call (stop_reason={response.stop_reason})"
+    )
+
+
 # ── main entry point ──────────────────────────────────────────────────────────
 
 def run(slug: str) -> Path:
@@ -66,8 +106,8 @@ def run(slug: str) -> Path:
     social_data = load_json(social_path)
     system_prompt = _load_system_prompt(slug)
 
-    info(AGENT, "Running editorial review with Gemini...")
-    review = call_with_tool(
+    info(AGENT, "Running editorial review with Claude Haiku...")
+    review = _run_review(
         system_prompt=system_prompt,
         user_message=(
             f"Review and edit the following content for slug '{slug}'.\n\n"
@@ -77,13 +117,6 @@ def run(slug: str) -> Path:
             "Then design the complete Instagram story plan (4 or 6 slides). "
             "Submit everything via the review tool."
         ),
-        fn_name="submit_review",
-        fn_description=(
-            "Submit the editorial review results, the corrected blog post, "
-            "and the complete Instagram story plan with one slide object per story slide."
-        ),
-        fn_parameters=_build_review_params(),
-        max_output_tokens=6144,
     )
 
     review["topic"] = social_data.get("topic", slug)

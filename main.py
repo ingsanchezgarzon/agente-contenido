@@ -31,16 +31,15 @@ def run_pipeline(topic: str) -> None:
     info("pipeline", f"Slug  : {slug}")
     print("=" * 60 + "\n")
 
-    steps = [
+    content_steps = [
         ("1/6 Research",   lambda: agents.research_agent.run(topic)),
         ("2/6 Strategy",   lambda: agents.strategist_agent.run(slug)),
         ("3/6 Writing",    lambda: agents.writer_agent.run(slug)),
         ("4/6 Editing",    lambda: agents.editor_agent.run(slug)),
         ("5/6 Publishing", lambda: agents.publisher_agent.run(slug)),
-        ("6/6 Design",     lambda: agents.designer_agent.run(slug)),
     ]
 
-    for label, step in steps:
+    for label, step in content_steps:
         info("pipeline", f"Starting {label}…")
         try:
             out = step()
@@ -48,6 +47,32 @@ def run_pipeline(topic: str) -> None:
         except Exception as exc:
             error("pipeline", f"{label} failed: {exc}")
             sys.exit(1)
+
+    # ── Human checkpoint ──────────────────────────────────────────────────────
+    prompts_file = ROOT / "outputs" / "published" / slug / "instagram_stories_prompts.txt"
+    print("\n" + "=" * 60)
+    print("  REVIEW REQUIRED — Instagram Story Prompts")
+    print("=" * 60)
+    print(f"\n  File: {prompts_file}")
+    print("\n  Open the file, review and edit the slide prompts,")
+    print("  then come back here and press Enter to generate the images.")
+    print("  (Press Ctrl+C to cancel and generate images later)\n")
+    try:
+        input("  Press Enter when ready to generate images… ")
+    except KeyboardInterrupt:
+        print("\n\nCancelled. Run the designer manually when ready:")
+        print(f"  python -m agents.designer_agent {slug}\n")
+        sys.exit(0)
+    print()
+    # ─────────────────────────────────────────────────────────────────────────
+
+    info("pipeline", "Starting 6/6 Design…")
+    try:
+        out = agents.designer_agent.run(slug)
+        success("pipeline", f"6/6 Design done → {out}")
+    except Exception as exc:
+        error("pipeline", f"6/6 Design failed: {exc}")
+        sys.exit(1)
 
     print("\n" + "=" * 60)
     success("pipeline", f"Pipeline complete. Files saved to: outputs/published/{slug}/")
