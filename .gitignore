@@ -4,4 +4,4 @@ __pycache__/
 *.pyo
 .venv/
 venv/
-outputs/published/
+outputs/

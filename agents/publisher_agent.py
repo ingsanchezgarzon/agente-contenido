@@ -18,9 +18,9 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+import anthropic
+
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 
 from utils.file_helpers import load_json, load_markdown, save_json
 from utils.logger import error, info, success
@@ -28,9 +28,9 @@ from utils.logger import error, info, success
 load_dotenv()
 
 AGENT = "publisher-agent"
-TEXT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+TEXT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 
-gemini_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+anthropic_client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -62,15 +62,13 @@ def _generate_story_prompts(reviewed: dict) -> str:
         "Use the exact headline and body text from the story plan verbatim."
     )
 
-    response = gemini_client.models.generate_content(
+    response = anthropic_client.messages.create(
         model=TEXT_MODEL,
-        contents=user_message,
-        config=types.GenerateContentConfig(
-            system_instruction=publisher_prompt,
-            max_output_tokens=4000,
-        ),
+        system=publisher_prompt,
+        messages=[{"role": "user", "content": user_message}],
+        max_tokens=4000,
     )
-    return response.text.strip()
+    return response.content[0].text.strip()
 
 
 # ── main entry point ──────────────────────────────────────────────────────────
@@ -124,7 +122,7 @@ def run(slug: str) -> Path:
     success(AGENT, f"Blog post saved -> {blog_path.name}")
 
     # Instagram story prompts — one full image prompt per slide
-    info(AGENT, f"Generating {n_slides} Instagram story prompts via Gemini ({story_format} format)...")
+    info(AGENT, f"Generating {n_slides} Instagram story prompts via Claude ({story_format} format)...")
     story_prompts = _generate_story_prompts(reviewed)
     stories_path = out_dir / "instagram_stories_prompts.txt"
     stories_path.write_text(story_prompts, encoding="utf-8")

@@ -18,14 +18,13 @@ import json as json_lib
 from datetime import datetime, timezone
 from pathlib import Path
 
+import anthropic
 import requests
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 
 from utils.file_helpers import load_markdown, save_json
 from utils.logger import error, info, success, warning
@@ -33,13 +32,13 @@ from utils.logger import error, info, success, warning
 load_dotenv()
 
 AGENT = "designer-agent"
-TEXT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+TEXT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-2-text-to-image")
 KIE_API_KEY = os.getenv("KIE_AI_API_KEY", "").strip()
 KIE_CREATE_URL = "https://api.kie.ai/api/v1/jobs/createTask"
 KIE_QUERY_URL  = "https://api.kie.ai/api/v1/jobs/recordInfo"
 
-gemini_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+anthropic_client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
 
 
 def _parse_prompts(prompts_file: Path) -> list[dict]:
@@ -69,16 +68,13 @@ def _parse_prompts(prompts_file: Path) -> list[dict]:
 
 def _enhance_prompt(raw_prompt: str, system_prompt: str) -> str:
     info(AGENT, "Enhancing prompt with designer AI…")
-    response = gemini_client.models.generate_content(
+    response = anthropic_client.messages.create(
         model=TEXT_MODEL,
-        contents=f"Raw slide prompt:\n\n{raw_prompt}",
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt,
-            max_output_tokens=1024,
-            temperature=0.4,
-        ),
+        system=system_prompt,
+        messages=[{"role": "user", "content": f"Raw slide prompt:\n\n{raw_prompt}"}],
+        max_tokens=1024,
     )
-    enhanced = response.text.strip()
+    enhanced = response.content[0].text.strip()
     if not enhanced:
         warning(AGENT, "Enhancement returned empty — using raw prompt")
         return raw_prompt

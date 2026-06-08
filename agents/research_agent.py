@@ -13,9 +13,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import anthropic
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 from jinja2 import Template
 
 load_dotenv()
@@ -30,114 +29,127 @@ from utils.web_search import search
 
 AGENT = "research-agent"
 
-# Initialize the official Google GenAI client
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 
 
-# ── schema helper ─────────────────────────────────────────────────────────────
-
-_TYPE_MAP = {
-    "string": "STRING", "number": "NUMBER", "integer": "INTEGER",
-    "boolean": "BOOLEAN", "array": "ARRAY", "object": "OBJECT",
-}
-
-
-def _to_schema(schema: dict) -> types.Schema:
-    """Convert a JSON Schema dict to a Gemini types.Schema."""
-    kwargs: dict = {}
-    raw_type = schema.get("type", "")
-    if raw_type:
-        kwargs["type"] = _TYPE_MAP.get(raw_type, raw_type.upper())
-    if "description" in schema:
-        kwargs["description"] = schema["description"]
-    if "enum" in schema:
-        kwargs["enum"] = [str(v) for v in schema["enum"]]
-    if "items" in schema:
-        kwargs["items"] = _to_schema(schema["items"])
-    if "properties" in schema:
-        kwargs["properties"] = {k: _to_schema(v) for k, v in schema["properties"].items()}
-    if "required" in schema:
-        kwargs["required"] = schema["required"]
-    if "maxItems" in schema:
-        kwargs["max_items"] = schema["maxItems"]
-    if "minItems" in schema:
-        kwargs["min_items"] = schema["minItems"]
-    return types.Schema(**kwargs)
-
-
-def _make_tool(name: str, description: str, parameters: dict) -> types.Tool:
-    fn_decl = types.FunctionDeclaration(
-        name=name,
-        description=description,
-        parameters=_to_schema(parameters),
-    )
-    return types.Tool(function_declarations=[fn_decl])
-
-
-def _extract_args(response) -> dict:
-    """Pull the function call args out of a Gemini response."""
-    candidate = response.candidates[0]
-    if candidate.content is None:
-        reason = getattr(candidate, "finish_reason", "unknown")
-        raise RuntimeError(f"Model returned empty content (finish_reason={reason}). Check model availability or API quota.")
-    fn_call = candidate.content.parts[0].function_call
-    return dict(fn_call.args)
+def _extract_tool_input(response) -> dict:
+    """Pull the tool_use input block out of an Anthropic response."""
+    for block in response.content:
+        if block.type == "tool_use":
+            return block.input
+    raise RuntimeError(f"Model did not call a tool. Stop reason: {response.stop_reason}")
 
 
 # ── prompt ────────────────────────────────────────────────────────────────────
 
-def _load_system_prompt(topic: str, slug: str) -> str:
+def _load_system_prompt(topic: str, slug: str, has_curated_docs: bool = False) -> str:
     template_text = load_markdown(ROOT / "prompts" / "research_prompt.md")
-    return Template(template_text).render(topic=topic, slug=slug)
+    return Template(template_text).render(topic=topic, slug=slug, has_curated_docs=has_curated_docs)
+
+
+# ── curated inputs ────────────────────────────────────────────────────────────
+
+def _find_relevant_inputs(topic: str) -> list[dict]:
+    """Scan inputs/research/*.md and return content of files relevant to the topic."""
+    input_dir = ROOT / "inputs" / "research"
+    if not input_dir.exists():
+        return []
+
+    md_files = list(input_dir.glob("*.md"))
+    if not md_files:
+        return []
+
+    info(AGENT, f"Found {len(md_files)} curated research file(s) — checking relevance…")
+
+    file_index: list[dict] = []
+    for f in md_files:
+        try:
+            content = f.read_text(encoding="utf-8")
+            file_index.append({"name": f.name, "content": content, "preview": content[:500]})
+        except Exception as exc:
+            warning(AGENT, f"Could not read {f.name}: {exc}")
+
+    if not file_index:
+        return []
+
+    index_text = "\n\n---\n\n".join(
+        f"File: {item['name']}\nPreview:\n{item['preview']}"
+        for item in file_index
+    )
+    prompt = (
+        f'Research topic: "{topic}"\n\n'
+        f"Available curated research files:\n\n{index_text}\n\n"
+        "List ONLY the exact filenames (one per line) of files that contain information "
+        "useful for researching this topic. If none are relevant, reply with exactly: NONE"
+    )
+
+    response = client.messages.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=256,
+    )
+
+    response_text = response.content[0].text.strip()
+    if response_text.upper() == "NONE":
+        info(AGENT, "No curated research files matched the topic.")
+        return []
+
+    relevant_names = {line.strip() for line in response_text.splitlines() if line.strip()}
+    relevant = [item for item in file_index if item["name"] in relevant_names]
+
+    if relevant:
+        success(AGENT, f"Using {len(relevant)} curated file(s): {[r['name'] for r in relevant]}")
+    else:
+        info(AGENT, "No curated files matched after filtering.")
+
+    return relevant
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-_QUERY_PARAMS = {
-    "type": "object",
-    "properties": {
-        "queries": {
-            "type": "array",
-            "minItems": 3,
-            "maxItems": 5,
-            "items": {"type": "string"},
-            "description": (
-                "3-5 search queries targeting authoritative AI and technology news sources "
-                "(TechCrunch, VentureBeat, MIT Technology Review, The Verge, arXiv), "
-                "supply chain publications (Supply Chain Dive, Logistics Management, Gartner, McKinsey), "
-                "and company blogs (OpenAI, Google, Microsoft, NVIDIA, Blue Yonder, SAP, o9 Solutions). "
-                "Include date qualifiers like '2025' or 'latest' to surface recent developments."
-            ),
-        }
+_QUERY_TOOL = {
+    "name": "submit_search_queries",
+    "description": "Submit a precise list of 3 to 5 web search queries for the topic.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "queries": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "3-5 search queries targeting personal finance publications "
+                    "(NerdWallet, Investopedia, Bankrate, Motley Fool, CNBC), "
+                    "and general financial news (Bloomberg, Reuters, FT, WSJ). "
+                    "Include date qualifiers like '2025' or '2026' to surface recent developments."
+                ),
+            }
+        },
+        "required": ["queries"],
     },
-    "required": ["queries"],
 }
 
 
-def _generate_search_queries(topic: str, system_prompt: str) -> list[str]:
+def _generate_search_queries(topic: str, system_prompt: str, curated_docs: list[dict] | None = None) -> list[str]:
     info(AGENT, f"Generating search queries for: {topic}")
-    try:
-        response = client.models.generate_content(
-            model=MODEL,
-            contents=f"Topic to research: {topic}\nGenerate search queries following your process.",
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                max_output_tokens=512,
-                tools=[_make_tool(
-                    name="submit_search_queries",
-                    description="Submit a precise list of 3 to 5 web search queries for the topic.",
-                    parameters=_QUERY_PARAMS,
-                )],
-                tool_config=types.ToolConfig(
-                    function_calling_config=types.FunctionCallingConfig(
-                        mode="ANY",
-                        allowed_function_names=["submit_search_queries"],
-                    )
-                ),
-            ),
+    curated_note = ""
+    if curated_docs:
+        names = ", ".join(d["name"] for d in curated_docs)
+        curated_note = (
+            f"\n\nNote: curated research documents are already available for this topic ({names}). "
+            "Generate queries that complement and update that existing research — focus on recent news, "
+            "new data, or angles not covered by a deep-research document."
         )
-        queries: list[str] = list(_extract_args(response)["queries"])
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            system=system_prompt,
+            messages=[{"role": "user", "content": f"Topic to research: {topic}{curated_note}\nGenerate search queries following your process."}],
+            tools=[_QUERY_TOOL],
+            tool_choice={"type": "tool", "name": "submit_search_queries"},
+            max_tokens=512,
+        )
+        queries: list[str] = list(_extract_tool_input(response)["queries"])
     except Exception as e:
         raise RuntimeError(f"Failed to generate search queries: {e}") from e
     info(AGENT, f"Generated {len(queries)} queries")
@@ -190,37 +202,48 @@ def _synthesize(
     queries: list[str],
     sources: list[dict],
     system_prompt: str,
+    curated_docs: list[dict] | None = None,
 ) -> dict:
     info(AGENT, "Synthesizing research output with Gemini…")
     sources_text = json.dumps(sources, indent=2, ensure_ascii=False)
+
+    curated_section = ""
+    if curated_docs:
+        doc_blocks = "\n\n===\n\n".join(
+            f"### {doc['name']}\n\n{doc['content']}" for doc in curated_docs
+        )
+        curated_section = (
+            "## CURATED RESEARCH DOCUMENTS\n"
+            "These are high-quality, verified deep-research documents. "
+            "Prioritize the information in these files over web search results. "
+            "When web results conflict with these documents, trust the documents.\n\n"
+            f"{doc_blocks}\n\n"
+            "---\n\n"
+        )
+
     user_message = (
         f"Topic: {topic}\n\n"
+        f"{curated_section}"
         f"Search queries used:\n{json.dumps(queries, ensure_ascii=False)}\n\n"
-        f"Raw search results:\n{sources_text}\n\n"
+        f"Web search results (use to complement and update the curated documents above):\n{sources_text}\n\n"
         "Complete steps 3–5 of your process: extract key facts, relevant laws, "
-        "statistics, and expert quotes from the sources above."
+        "statistics, and expert quotes from all sources above."
     )
+    synthesis_tool = {
+        "name": "submit_research_synthesis",
+        "description": "Submit extracted research findings: facts, statistics, and quotes.",
+        "input_schema": _build_synthesis_params(),
+    }
     try:
-        response = client.models.generate_content(
+        response = client.messages.create(
             model=MODEL,
-            contents=user_message,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                max_output_tokens=4096,
-                tools=[_make_tool(
-                    name="submit_research_synthesis",
-                    description="Submit extracted research findings: facts, laws, statistics, and quotes.",
-                    parameters=_build_synthesis_params(),
-                )],
-                tool_config=types.ToolConfig(
-                    function_calling_config=types.FunctionCallingConfig(
-                        mode="ANY",
-                        allowed_function_names=["submit_research_synthesis"],
-                    )
-                ),
-            ),
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}],
+            tools=[synthesis_tool],
+            tool_choice={"type": "tool", "name": "submit_research_synthesis"},
+            max_tokens=4096,
         )
-        extracted = _extract_args(response)
+        extracted = _extract_tool_input(response)
     except Exception as e:
         raise RuntimeError(f"Failed to synthesize research: {e}") from e
 
@@ -241,15 +264,17 @@ def run(topic: str) -> Path:
     slug = slugify(topic)
     info(AGENT, f"Starting research for topic='{topic}' slug='{slug}'")
 
-    system_prompt = _load_system_prompt(topic, slug)
+    curated_docs = _find_relevant_inputs(topic)
 
-    queries = _generate_search_queries(topic, system_prompt)
+    system_prompt = _load_system_prompt(topic, slug, has_curated_docs=bool(curated_docs))
+
+    queries = _generate_search_queries(topic, system_prompt, curated_docs=curated_docs)
 
     sources = _run_searches(queries)
     if not sources:
         raise RuntimeError("No search results returned — check your API keys in .env")
 
-    output = _synthesize(topic, slug, queries, sources, system_prompt)
+    output = _synthesize(topic, slug, queries, sources, system_prompt, curated_docs=curated_docs)
 
     schema_path = ROOT / "schemas" / "research_output.json"
     errors = validate_json(output, schema_path)
