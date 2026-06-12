@@ -96,7 +96,9 @@ def _run_review(system_prompt: str, user_message: str) -> dict:
 
 # ── main entry point ──────────────────────────────────────────────────────────
 
-def run(slug: str) -> Path:
+def run(slug: str, feedback: str | None = None) -> Path:
+    """Run the editorial review. *feedback* is optional human reviewer guidance
+    (from the UI's 'Reject with Feedback' gate) that the editor must address."""
     info(AGENT, f"Starting editorial review for slug='{slug}'")
 
     social_path = ROOT / "outputs" / "drafts" / f"{slug}_social.json"
@@ -104,18 +106,38 @@ def run(slug: str) -> Path:
         raise FileNotFoundError(f"Required input not found: {social_path}")
 
     social_data = load_json(social_path)
+
+    # Ground truth for fact-checking — the Brand Guardian verifies every figure
+    # against the raw research, not the draft's own claims.
+    research_path = ROOT / "outputs" / "research" / f"{slug}.json"
+    research_data = load_json(research_path) if research_path.exists() else {}
+    if not research_data:
+        warning(AGENT, f"No research file found at {research_path} — accuracy checks will be limited")
+
     system_prompt = _load_system_prompt(slug)
+
+    feedback_section = ""
+    if feedback:
+        feedback_section = (
+            f"## HUMAN REVIEWER FEEDBACK (highest priority — address every point)\n\n"
+            f"{feedback}\n\n"
+        )
+        info(AGENT, "Re-running review with human feedback")
 
     info(AGENT, "Running editorial review with Claude Haiku...")
     review = _run_review(
         system_prompt=system_prompt,
         user_message=(
+            f"{feedback_section}"
             f"Review and edit the following content for slug '{slug}'.\n\n"
-            f"## Blog Post + Story Concept\n\n"
+            f"## Draft (Blog Post + Story Concept)\n\n"
             f"{json.dumps(social_data, indent=2, ensure_ascii=False)}\n\n"
-            "Work through every item in the review checklist. Fix all fixable issues directly. "
-            "Then design the complete Instagram story plan (4 or 6 slides). "
-            "Submit everything via the review tool."
+            f"## Raw Research Data (ground truth for every factual check)\n\n"
+            f"{json.dumps(research_data, indent=2, ensure_ascii=False)}\n\n"
+            "Work through every item in the review checklist. Verify every figure against "
+            "the research data above; remove or soften any claim you cannot trace to it. "
+            "Fix all fixable issues directly. Then design the complete Instagram story plan "
+            "(4 or 6 slides). Submit everything via the review tool."
         ),
     )
 
@@ -139,8 +161,6 @@ def run(slug: str) -> Path:
 
     if not approved:
         warning(AGENT, "Content was NOT approved -- check issues_found in the output file.")
-    if approved and not publish_ready:
-        warning(AGENT, "Approved but flagged for human review before publishing.")
 
     return out_path
 

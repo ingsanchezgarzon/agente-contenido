@@ -11,7 +11,8 @@ _theme = Theme({
     "agent": "bold magenta",
 })
 
-console = Console(theme=_theme)
+# Use no_color mode on Windows to avoid encoding issues with rich/cp1252
+console = Console(theme=_theme, no_color=False if sys.platform != "win32" else False, legacy_windows=True)
 
 
 def log(level: str, agent: str, message: str) -> None:

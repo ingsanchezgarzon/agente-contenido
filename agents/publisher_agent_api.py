@@ -48,9 +48,11 @@ def run(slug: str) -> Path:
 
     reviewed = load_json(review_path)
 
-    if not reviewed.get("publish_ready", False):
+    if not reviewed.get("approved", False):
+        issues = reviewed.get("issues_found", [])
+        reasons = "\n  - ".join(issues[:3]) if issues else "see issues_found in the review file"
         raise RuntimeError(
-            f"Content is not publish_ready. Human review required: {review_path}"
+            f"Content was rejected by the editor and cannot be published.\n  - {reasons}"
         )
 
     topic = reviewed.get("topic", slug)

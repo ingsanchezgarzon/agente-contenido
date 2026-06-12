@@ -43,11 +43,10 @@ Each image prompt must specify:
 7. **Style**: flat vector illustration, clean, professional, no gradients on text, no busy textures
 
 ## Output Format
-For each slide, write a self-contained prompt with this header:
-```
---- SLIDE [N] of [TOTAL]: [ROLE] ---
-```
-Then the full prompt for that slide (150–250 words), detailed enough to execute directly.
+Submit ALL slides in one call via the `submit_slide_prompts` tool — one object per slide with:
+- `slide_number` — the slide's number (1-based)
+- `role` — the slide's role from the story plan (intro, step_1, top_3, final, ...)
+- `prompt` — the full self-contained image prompt (150–250 words), plain text (no markdown headers or bold markers), detailed enough to execute directly
 
 ## Constraints
 - Generate ALL slides in one output — never skip a slide

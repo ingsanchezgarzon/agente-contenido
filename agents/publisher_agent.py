@@ -23,7 +23,8 @@ import anthropic
 from dotenv import load_dotenv
 
 from utils.file_helpers import load_json, load_markdown, save_json
-from utils.logger import error, info, success
+from utils.logger import error, info, success, warning
+from utils.retry import with_retry
 
 load_dotenv()
 
@@ -35,8 +36,43 @@ anthropic_client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-def _generate_story_prompts(reviewed: dict) -> str:
-    """Call Gemini to generate one complete image prompt per story slide."""
+# Structured output contract: the model submits one prompt per slide via this
+# tool, and Python composes the .txt headers — the designer's parser can never
+# break on a formatting whim again.
+_PROMPTS_TOOL = {
+    "name": "submit_slide_prompts",
+    "description": "Submit one complete, self-contained image generation prompt per story slide.",
+    "input_schema": {
+        "type": "object",
+        "required": ["slides"],
+        "properties": {
+            "slides": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["slide_number", "role", "prompt"],
+                    "properties": {
+                        "slide_number": {"type": "integer"},
+                        "role": {"type": "string", "description": "e.g. intro, step_1, top_3, final"},
+                        "prompt": {
+                            "type": "string",
+                            "description": (
+                                "Complete 150-250 word image prompt: canvas, exact background color, "
+                                "every text element with exact wording/font/size/color/position, "
+                                "central visual, accents, slide counter. Plain text, no markdown."
+                            ),
+                        },
+                    },
+                },
+            }
+        },
+    },
+}
+
+
+@with_retry()
+def _generate_story_prompts(reviewed: dict) -> tuple[str, list[dict]]:
+    """Generate one image prompt per slide (structured) and compose the prompts .txt."""
     topic = reviewed.get("topic", "")
     story_plan = reviewed.get("story_plan", {})
     story_format = story_plan.get("format", "steps")
@@ -57,7 +93,8 @@ def _generate_story_prompts(reviewed: dict) -> str:
         f"Topic: {topic}\n"
         f"Story format: {story_format} ({total} slides total)\n\n"
         f"Story plan:\n{slides_json}\n\n"
-        "Generate a complete, professional image prompt for EACH slide. "
+        "Generate a complete, professional image prompt for EACH of the "
+        f"{total} slides and submit them via the submit_slide_prompts tool. "
         "Follow all design specs in your system prompt exactly. "
         "Use the exact headline and body text from the story plan verbatim."
     )
@@ -66,9 +103,28 @@ def _generate_story_prompts(reviewed: dict) -> str:
         model=TEXT_MODEL,
         system=publisher_prompt,
         messages=[{"role": "user", "content": user_message}],
-        max_tokens=4000,
+        tools=[_PROMPTS_TOOL],
+        tool_choice={"type": "tool", "name": "submit_slide_prompts"},
+        max_tokens=6000,
     )
-    return response.content[0].text.strip()
+
+    prompt_slides: list[dict] = []
+    for block in response.content:
+        if block.type == "tool_use":
+            prompt_slides = list(block.input.get("slides", []))
+            break
+    if not prompt_slides:
+        raise RuntimeError("Publisher model returned no slide prompts (no tool call)")
+    if len(prompt_slides) != total:
+        warning(AGENT, f"Model returned {len(prompt_slides)} prompts for {total} slides")
+
+    prompt_slides.sort(key=lambda s: s.get("slide_number", 0))
+    blocks = [
+        f"--- SLIDE {s['slide_number']} of {total}: {str(s.get('role', 'slide')).upper()} ---\n\n"
+        f"{s['prompt'].strip()}\n"
+        for s in prompt_slides
+    ]
+    return "\n".join(blocks), prompt_slides
 
 
 # ── main entry point ──────────────────────────────────────────────────────────
@@ -82,9 +138,11 @@ def run(slug: str) -> Path:
 
     reviewed = load_json(review_path)
 
-    if not reviewed.get("publish_ready", False):
+    if not reviewed.get("approved", False):
+        issues = reviewed.get("issues_found", [])
+        reasons = "\n  - ".join(issues[:3]) if issues else "see issues_found in the review file"
         raise RuntimeError(
-            f"Content is not publish_ready. Human review required: {review_path}"
+            f"Content was rejected by the editor and cannot be published.\n  - {reasons}"
         )
 
     topic = reviewed.get("topic", slug)
@@ -123,9 +181,10 @@ def run(slug: str) -> Path:
 
     # Instagram story prompts — one full image prompt per slide
     info(AGENT, f"Generating {n_slides} Instagram story prompts via Claude ({story_format} format)...")
-    story_prompts = _generate_story_prompts(reviewed)
+    story_prompts, prompt_slides = _generate_story_prompts(reviewed)
     stories_path = out_dir / "instagram_stories_prompts.txt"
     stories_path.write_text(story_prompts, encoding="utf-8")
+    save_json({"slug": slug, "slides": prompt_slides}, out_dir / "slides_prompts.json")
     result["instagram_stories"] = {"status": "saved", "file": str(stories_path), "slides": n_slides}
     success(AGENT, f"Instagram story prompts saved -> {stories_path.name}")
 

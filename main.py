@@ -10,7 +10,7 @@ Routing logic (runs before any agent):
   - Topic is always normalized to English for the pipeline.
   - If one curated file in inputs/research/ clearly matches the topic,
     the research agent is skipped and the pipeline starts at strategy.
-  - Otherwise the full pipeline runs (research → strategy → writing → editing → publishing).
+  - Otherwise the full pipeline runs (research ->strategy ->writing ->editing ->publishing).
 """
 
 import sys
@@ -37,7 +37,7 @@ def _run_step(label: str, fn) -> object:
     info("pipeline", f"Starting {label}…")
     try:
         out = fn()
-        success("pipeline", f"{label} done → {out}")
+        success("pipeline", f"{label} done ->{out}")
         return out
     except Exception as exc:
         error("pipeline", f"{label} failed: {exc}")
@@ -66,7 +66,7 @@ def _design_step(slug: str) -> None:
     info("pipeline", "Starting 6/6 Design…")
     try:
         out = agents.designer_agent.run(slug)
-        success("pipeline", f"6/6 Design done → {out}")
+        success("pipeline", f"6/6 Design done ->{out}")
     except Exception as exc:
         error("pipeline", f"6/6 Design failed: {exc}")
         sys.exit(1)
@@ -75,9 +75,9 @@ def _design_step(slug: str) -> None:
 def _print_summary(slug: str) -> None:
     print("\n" + "=" * 60)
     success("pipeline", f"Pipeline complete. Files saved to: outputs/published/{slug}/")
-    info("pipeline", "  blog_post.txt                → script for video recording")
-    info("pipeline", "  instagram_stories_prompts.txt → image prompts reference")
-    info("pipeline", "  slide_1.png ... slide_N.png  → ready-to-post Instagram stories")
+    info("pipeline", "  blog_post.txt                ->script for video recording")
+    info("pipeline", "  instagram_stories_prompts.txt ->image prompts reference")
+    info("pipeline", "  slide_1.png ... slide_N.png  ->ready-to-post Instagram stories")
     print("=" * 60 + "\n")
 
 
@@ -99,7 +99,7 @@ def _fast_track(result: RouteResult) -> None:
         research_data = convert_to_research_json(result.matched_file, topic, slug)
         out_path = ROOT / "outputs" / "research" / f"{slug}.json"
         save_json(research_data, out_path)
-        success("pipeline", f"Research JSON ready → {out_path.name}")
+        success("pipeline", f"Research JSON ready ->{out_path.name}")
     except Exception as exc:
         error("pipeline", f"Curated file conversion failed: {exc}")
         sys.exit(1)
@@ -115,7 +115,7 @@ def _fast_track(result: RouteResult) -> None:
 
 
 def _full_pipeline(result: RouteResult) -> None:
-    """Standard pipeline: research → strategy → writing → editing → publishing."""
+    """Standard pipeline: research ->strategy ->writing ->editing ->publishing."""
     topic = result.english_topic
     slug = slugify(topic)
 
@@ -144,7 +144,7 @@ def run_pipeline(raw_topic: str) -> None:
     result = route(raw_topic)
 
     if result.was_translated:
-        warning("pipeline", f"Translated : {raw_topic!r} → {result.english_topic!r}")
+        warning("pipeline", f"Translated : {raw_topic!r} ->{result.english_topic!r}")
 
     if result.matched_file:
         _fast_track(result)
