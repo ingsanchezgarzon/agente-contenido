@@ -376,14 +376,110 @@ def _gate_vision():
         st.rerun()
 
 
+def _set_direction(path: Path, direction: str):
+    """Write a human creative direction into an artifact JSON. Because the next
+    agent embeds that JSON verbatim in its prompt, the choice steers its output."""
+    data = load_json(path)
+    data["human_direction"] = (
+        f"HUMAN CREATIVE DIRECTION (highest priority — shape the output around this): {direction}"
+    )
+    save_json(data, path)
+    _log("steering", f"Creative direction set: {direction}")
+
+
+def _direction_buttons(options: list[tuple[str, str]], target: Path, key_prefix: str,
+                       rerun_stage: str | None = None):
+    """Render story-direction choices. Picking one writes the direction and moves on
+    (or re-runs *rerun_stage* so the choice reshapes that agent's output)."""
+    p = st.session_state.pipe
+    cols = st.columns(len(options))
+    for col, (label, direction) in zip(cols, options):
+        with col:
+            if st.button(label, key=f"{key_prefix}_{label}", use_container_width=True,
+                         help=direction):
+                _set_direction(target, direction)
+                if rerun_stage:
+                    p["stage_status"][rerun_stage] = "pending"
+                    p["stage_idx"] = STAGE_KEYS.index(rerun_stage)
+                    p["gate"], p["status"] = None, "running"
+                else:
+                    _next_stage()
+                st.rerun()
+
+
 def _gate_step():
-    """Semi-Manual: multiple-choice routing after each agent."""
+    """Semi-Manual: storytelling decision tree after each agent."""
     p = st.session_state.pipe
     stage = p["gate"]["stage"]
+    slug = p["slug"]
     label = dict((k, l) for k, l, _ in STAGES)[stage]
-    st.markdown(f"### 🚦 {label} complete — how do you want to proceed?")
+    st.markdown(f"### 🚦 {label} complete — you're the showrunner. What's the story?")
 
-    _render_stage_output(stage, p["slug"])
+    research_path = ROOT / "outputs" / "research" / f"{slug}.json"
+    strategy_path = ROOT / "outputs" / "strategy" / f"{slug}.json"
+
+    if stage == "research":
+        research = _safe_load(research_path)
+        st.markdown("Here's the raw material the Research agent dug up:")
+        t1, t2, t3 = st.tabs(["💎 Key facts", "📊 Statistics", "⚠️ Mistakes & analogies"])
+        with t1: _bullets(research.get("key_facts"), 6)
+        with t2: _bullets(research.get("statistics"), 6)
+        with t3:
+            _bullets(research.get("common_mistakes"), 3)
+            _bullets(research.get("simple_analogies"), 3)
+        st.divider()
+        st.markdown("#### 🎬 Pick the soul of this story — the Strategist will build around it:")
+        _direction_buttons([
+            ("📊 Wow with numbers", "Build the angle around the most surprising statistics — lead with a number that stops the scroll."),
+            ("⚠️ Sound the alarm", "Build the angle around the risks, fines, alerts and common mistakes — what people get wrong and what it costs them."),
+            ("💰 Show the win", "Build the angle around concrete money saved or earned — the practical payoff the reader can capture this week."),
+            ("🧸 Make it simple & fun", "Build the angle around the simplest analogies — make a beginner feel smart, prioritize clarity and charm over depth."),
+        ], research_path, "dir_research")
+
+    elif stage == "strategy":
+        strategy = _safe_load(strategy_path)
+        st.markdown(f"**🎯 The Strategist's chosen angle:**")
+        st.info(strategy.get("angle", "—"))
+        fmt = strategy.get("story_format", "?")
+        st.caption(f"Format: **{fmt}**  ·  Audience: {strategy.get('target_audience', '—')}")
+        st.divider()
+        st.markdown("#### 🪝 Which hook should open the story? (the Writer will lead with it)")
+        hooks = strategy.get("hooks", [])[:4]
+        for i, hook in enumerate(hooks):
+            if st.button(f"🪝 “{hook}”", key=f"hook_{i}", use_container_width=True):
+                _set_direction(strategy_path, f"Open the post with this exact hook (or a tightened version of it): \"{hook}\"")
+                _next_stage()
+                st.rerun()
+        st.markdown("#### 🎭 …or set the emotional temperature instead:")
+        _direction_buttons([
+            ("🔥 Urgent & punchy", "Write with urgency — short sentences, high stakes, the reader should feel they must act this week."),
+            ("🧘 Calm & confident", "Write calm, stoic and reassuring — the system is complex but knowable; no alarm, pure quiet authority."),
+            ("😄 Playful & light", "Write playful and fun — lean into the analogies and humor while keeping every number exact."),
+        ], strategy_path, "dir_strategy")
+
+    elif stage == "writing":
+        draft = _safe_load(ROOT / "outputs" / "drafts" / f"{slug}_social.json")
+        blog = draft.get("blog_post", {})
+        st.markdown(f"#### “{blog.get('title', '—')}”")
+        st.caption(f"{_words(blog.get('text'))} words")
+        with st.expander("📖 Read the full draft", expanded=True):
+            st.write(blog.get("text", ""))
+        st.divider()
+        st.markdown("#### 🎛️ Happy? Or remix it — your note goes straight into the Writer's brief:")
+        _direction_buttons([
+            ("⚡ Punchier", "Rewrite punchier: shorter sentences, stronger verbs, cut every word that doesn't earn its place."),
+            ("📊 More data", "Rewrite with more numbers up front — every claim anchored to a figure from the research."),
+            ("❤️ More story", "Rewrite with more narrative — a concrete person, a scene, a before/after; make the reader feel it."),
+        ], strategy_path, "dir_writing", rerun_stage="writing")
+
+    elif stage == "publishing":
+        published_dir = ROOT / "outputs" / "published" / slug
+        caption = published_dir / "instagram_caption.txt"
+        n_prompts = len(_safe_load(published_dir / "slides_prompts.json").get("slides", []))
+        st.markdown(f"**📦 Packed and ready:** the Instagram caption + **{n_prompts} image prompts**.")
+        if caption.exists():
+            with st.expander("📱 The Instagram caption (what your followers will read)", expanded=True):
+                st.text(caption.read_text(encoding="utf-8"))
 
     st.divider()
     a, b, c = st.columns(3)
@@ -420,28 +516,6 @@ def _gate_step():
                     p["stage_idx"] = idx
                     p["gate"], p["status"] = None, "running"
                     st.rerun()
-
-
-def _render_stage_output(stage: str, slug: str):
-    """Show the artifact each stage produced, so the routing decision is informed."""
-    paths = {
-        "research":   ROOT / "outputs" / "research" / f"{slug}.json",
-        "strategy":   ROOT / "outputs" / "strategy" / f"{slug}.json",
-        "writing":    ROOT / "outputs" / "drafts" / f"{slug}_social.json",
-        "publishing": ROOT / "outputs" / "published" / f"{slug}_published.json",
-    }
-    path = paths.get(stage)
-    if not path or not path.exists():
-        return
-    data = load_json(path)
-    if stage == "writing":
-        st.subheader(data.get("blog_post", {}).get("title", ""))
-        st.write(data.get("blog_post", {}).get("text", ""))
-        with st.expander("Story concept"):
-            st.write(data.get("story_concept", ""))
-    else:
-        with st.expander(f"📄 {path.name}", expanded=(stage == "strategy")):
-            st.json(data)
 
 
 # ── UI: stage inspector ───────────────────────────────────────────────────────
@@ -576,9 +650,13 @@ def _stage_inspector(stage: str, slug: str):
             n = len(slides_meta) or len(reviewed.get("story_plan", {}).get("slides", []))
             _flow_banner(
                 f"The Editor's approved post + {n}-slide plan",
-                "Saved the final script, then wrote a complete **art-direction brief per slide** (colors, fonts, layout, exact words)",
-                f"`blog_post.txt` + **{n} image prompts** — everything the Designer needs",
+                "Wrote the **Instagram caption** (hook, value, fine print, CTA, hashtags) and an **art-direction brief per slide**",
+                f"`instagram_caption.txt` + **{n} image prompts** — the full publication pack",
             )
+            cap = published_dir / "instagram_caption.txt"
+            if cap.exists():
+                with st.expander("📱 The Instagram caption", expanded=True):
+                    st.text(cap.read_text(encoding="utf-8"))
             for s in slides_meta[:6]:
                 with st.expander(f"🖌️ Slide {s.get('slide_number')} ({s.get('role')}) — designer brief"):
                     st.write(s.get("prompt", ""))
@@ -626,7 +704,7 @@ def _final_dashboard():
     st.balloons()
     st.markdown(f"## ✅ Pipeline complete — `{slug}`")
 
-    tab_img, tab_post, tab_prompts = st.tabs(["🖼️ Slides", "📄 Blog post / script", "🧾 Image prompts"])
+    tab_img, tab_post, tab_prompts = st.tabs(["🖼️ Slides", "📱 Instagram caption", "🧾 Image prompts"])
     with tab_img:
         images = sorted(published.glob("slide_*.png"),
                         key=lambda f: int(re.search(r"(\d+)", f.stem).group(1)))
@@ -637,9 +715,13 @@ def _final_dashboard():
         else:
             st.info("No images generated.")
     with tab_post:
-        blog = published / "blog_post.txt"
-        if blog.exists():
-            st.text(blog.read_text(encoding="utf-8"))
+        caption = published / "instagram_caption.txt"
+        legacy = published / "blog_post.txt"
+        if caption.exists():
+            st.text(caption.read_text(encoding="utf-8"))
+            st.caption("Copy-paste this as your post caption 👆")
+        elif legacy.exists():  # runs published before the caption upgrade
+            st.text(legacy.read_text(encoding="utf-8"))
     with tab_prompts:
         prm = published / "instagram_stories_prompts.txt"
         if prm.exists():

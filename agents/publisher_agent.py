@@ -127,6 +127,52 @@ def _generate_story_prompts(reviewed: dict) -> tuple[str, list[dict]]:
     return "\n".join(blocks), prompt_slides
 
 
+_CAPTION_SYSTEM = """You write Instagram captions for a premium personal-finance brand for expats in France.
+Voice: the calm, data-backed insider — a smart ally, never a bank brochure, never panic-bait.
+
+Write ONE complete, ready-to-paste Instagram caption from the approved content. Structure:
+1. HOOK LINE (first line, under 125 characters — it's all that shows before "...more").
+   A number, a stake, or a contrarian claim. Make them tap.
+2. THE VALUE (6-12 short lines, one idea per line, generous line breaks).
+   The core insight in plain words. Exact figures from the content. One analogy max.
+   Tasteful emojis as visual bullets (💡📊⚠️💰), 4-8 total in the whole caption.
+3. THE FINE PRINT (2-4 lines). The technical nuances and conditions that the slides
+   simplified — this is where precision lives. Start it with something like "The details:".
+4. DISCLAIMER (1 line). Education, not personal financial/tax advice.
+5. CTA (1-2 lines). Save this post / share it with an expat friend / comment a keyword.
+6. HASHTAGS (one final line, 5-8 niche tags, e.g. #expatfrance #financefrance #investinginfrance).
+
+Rules: plain text only (no markdown, no asterisks). Every number must come from the
+provided content — never invent. Keep total length under 2,000 characters.
+Reply with ONLY the caption text."""
+
+
+@with_retry()
+def _generate_instagram_caption(reviewed: dict) -> str:
+    """Generate the ready-to-publish Instagram caption from the approved content."""
+    blog = reviewed.get("blog_post", {})
+    slides = reviewed.get("story_plan", {}).get("slides", [])
+    slides_text = "\n".join(
+        f"- Slide {s.get('slide_number')}: {s.get('headline')} — {s.get('body')}"
+        for s in slides
+    )
+    response = anthropic_client.messages.create(
+        model=TEXT_MODEL,
+        system=_CAPTION_SYSTEM,
+        messages=[{
+            "role": "user",
+            "content": (
+                f"Topic: {reviewed.get('topic', '')}\n\n"
+                f"Approved post (source of truth for facts):\n{blog.get('title', '')}\n\n{blog.get('text', '')}\n\n"
+                f"Story slides being published:\n{slides_text}\n\n"
+                "Write the Instagram caption."
+            ),
+        }],
+        max_tokens=1500,
+    )
+    return response.content[0].text.strip()
+
+
 # ── main entry point ──────────────────────────────────────────────────────────
 
 def run(slug: str) -> Path:
@@ -160,24 +206,17 @@ def run(slug: str) -> Path:
         "output_folder": str(out_dir),
         "story_format": story_format,
         "n_slides": n_slides,
-        "blog_post": {},
+        "instagram_caption": {},
         "instagram_stories": {},
     }
 
-    # Blog post
-    blog = reviewed.get("blog_post", {})
-    blog_title = blog.get("title", "")
-    blog_text = blog.get("text", "")
-    script_notes = blog.get("script_notes", "")
-
-    blog_content = f"{blog_title}\n{'='*len(blog_title)}\n\n{blog_text}"
-    if script_notes:
-        blog_content += f"\n\n---\nSCRIPT NOTES (for camera recording):\n{script_notes}"
-
-    blog_path = out_dir / "blog_post.txt"
-    blog_path.write_text(blog_content, encoding="utf-8")
-    result["blog_post"] = {"status": "saved", "file": str(blog_path)}
-    success(AGENT, f"Blog post saved -> {blog_path.name}")
+    # Instagram caption — the actual publication text, ready to paste
+    info(AGENT, "Generating Instagram caption (publication text)...")
+    caption = _generate_instagram_caption(reviewed)
+    caption_path = out_dir / "instagram_caption.txt"
+    caption_path.write_text(caption, encoding="utf-8")
+    result["instagram_caption"] = {"status": "saved", "file": str(caption_path)}
+    success(AGENT, f"Instagram caption saved -> {caption_path.name}")
 
     # Instagram story prompts — one full image prompt per slide
     info(AGENT, f"Generating {n_slides} Instagram story prompts via Claude ({story_format} format)...")
@@ -194,8 +233,8 @@ def run(slug: str) -> Path:
     success(AGENT, f"Log saved -> {log_path.name}")
 
     info(AGENT, f"Done. Files written to: {out_dir}")
-    info(AGENT, f"  -> Use blog_post.txt as your video script or blog content")
-    info(AGENT, f"  -> Use instagram_stories_prompts.txt to generate {n_slides} story images")
+    info(AGENT, f"  -> instagram_caption.txt is the ready-to-paste publication text")
+    info(AGENT, f"  -> instagram_stories_prompts.txt drives the {n_slides} story images")
 
     return log_path
 
