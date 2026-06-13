@@ -1,4 +1,4 @@
-"""
+﻿"""
 Visual Orchestrator — local web UI for the multi-agent Instagram pipeline.
 
 Run:
@@ -460,9 +460,14 @@ def _gate_step():
     elif stage == "writing":
         draft = _safe_load(ROOT / "outputs" / "drafts" / f"{slug}_social.json")
         blog = draft.get("blog_post", {})
-        st.markdown(f"#### “{blog.get('title', '—')}”")
+        if isinstance(blog, str):
+            try:
+                blog = json.loads(blog)
+            except Exception:
+                blog = {"title": "", "text": blog}
+        st.markdown(f"#### “{blog.get('title', '-')}”")
         st.caption(f"{_words(blog.get('text'))} words")
-        with st.expander("📖 Read the full draft", expanded=True):
+        with st.expander("\U0001F4D6 Read the full draft", expanded=True):
             st.write(blog.get("text", ""))
         st.divider()
         st.markdown("#### 🎛️ Happy? Or remix it — your note goes straight into the Writer's brief:")

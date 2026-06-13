@@ -1,11 +1,10 @@
 """
 Shared LLM helpers — text, tool-use, and vision calls via Anthropic Claude.
 
-Text + tool calls  → Anthropic claude-haiku-4-5-20251001
-Vision critique    → Anthropic claude-sonnet-4-6 (native vision support)
-
-All agents that are not the researcher or designer use this module.
-Image generation is handled separately by the designer via KIE AI.
+  Text / tool-use  → Anthropic  claude-haiku-4-5-20251001
+  Vision critique  → Anthropic  claude-sonnet-4-6
+  Image generation → KIE AI     gpt-image-2-text-to-image  (designer_agent only)
+  Web search       → Tavily     (research_agent only)
 """
 
 import base64
@@ -17,7 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+MODEL        = os.getenv("ANTHROPIC_MODEL",        "claude-haiku-4-5-20251001")
 VISION_MODEL = os.getenv("ANTHROPIC_VISION_MODEL", "claude-sonnet-4-6")
 
 _client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
