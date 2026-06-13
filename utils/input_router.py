@@ -16,16 +16,14 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
+
+from utils.gemini_helpers import call_text_only, call_with_tool
 
 load_dotenv()
 
 ROOT = Path(__file__).parent.parent
 INPUT_DIR = ROOT / "inputs" / "research"
-
-_client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
-_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 
 
 @dataclass
@@ -43,21 +41,17 @@ def normalize_topic(raw_topic: str) -> tuple[str, bool]:
     If raw_topic is already English, returns it cleaned.
     If it's another language, translates and returns a concise English topic phrase.
     """
-    response = _client.messages.create(
-        model=_MODEL,
-        messages=[{
-            "role": "user",
-            "content": (
-                f'Topic entered by user: "{raw_topic}"\n\n'
-                "If this topic is already in English, return it exactly as-is (cleaned up only if needed).\n"
-                "If it is in another language, translate it into a clear, concise English topic phrase "
-                "(5-10 words max, no punctuation at the end).\n"
-                "Reply with ONLY the English topic — no explanation, no quotes."
-            ),
-        }],
-        max_tokens=64,
-    )
-    english = response.content[0].text.strip().strip('"').strip("'")
+    english = call_text_only(
+        system_prompt="You are a language translator and normalizer.",
+        user_message=(
+            f'Topic entered by user: "{raw_topic}"\n\n'
+            "If this topic is already in English, return it exactly as-is (cleaned up only if needed).\n"
+            "If it is in another language, translate it into a clear, concise English topic phrase "
+            "(5-10 words max, no punctuation at the end).\n"
+            "Reply with ONLY the English topic — no explanation, no quotes."
+        ),
+        max_output_tokens=64,
+    ).strip().strip('"').strip("'")
     was_translated = english.lower() != raw_topic.lower()
     return english, was_translated
 
@@ -94,24 +88,20 @@ def find_best_match(english_topic: str) -> Path | None:
         for item in index
     )
 
-    response = _client.messages.create(
-        model=_MODEL,
-        messages=[{
-            "role": "user",
-            "content": (
-                f'Topic: "{english_topic}"\n\n'
-                f"Available curated research files:\n\n{index_text}\n\n"
-                "Which ONE file is the clearest, most complete match for this topic?\n"
-                "Rules:\n"
-                "- Reply with ONLY the exact filename if there is one clear match.\n"
-                "- Reply with NONE if no file covers the topic, or if multiple files match equally well.\n"
-                "No explanations. No punctuation. Just the filename or NONE."
-            ),
-        }],
-        max_tokens=128,
-    )
+    answer = call_text_only(
+        system_prompt="You are a file matcher for research documents.",
+        user_message=(
+            f'Topic: "{english_topic}"\n\n'
+            f"Available curated research files:\n\n{index_text}\n\n"
+            "Which ONE file is the clearest, most complete match for this topic?\n"
+            "Rules:\n"
+            "- Reply with ONLY the exact filename if there is one clear match.\n"
+            "- Reply with NONE if no file covers the topic, or if multiple files match equally well.\n"
+            "No explanations. No punctuation. Just the filename or NONE."
+        ),
+        max_output_tokens=128,
+    ).strip()
 
-    answer = response.content[0].text.strip()
     if answer.upper() == "NONE" or not answer:
         return None
 
@@ -124,84 +114,69 @@ def find_best_match(english_topic: str) -> Path | None:
 def convert_to_research_json(md_path: Path, english_topic: str, slug: str) -> dict:
     """Read a curated markdown file and extract a research_output.json-compatible dict.
 
-    Uses Claude to pull out key facts, statistics, applications, etc.
+    Uses Gemini to pull out key facts, statistics, applications, etc.
     All output fields are in English.
     """
     content = md_path.read_text(encoding="utf-8")
 
-    tool = {
-        "name": "submit_research_extraction",
-        "description": "Extract structured research findings from a curated document.",
-        "input_schema": {
+    extracted = call_with_tool(
+        system_prompt=(
+            "You are a research analyst extracting structured findings from a curated document. "
+            "The document may be in any language — you MUST extract and write all output in English. "
+            "Be thorough: extract as many key facts, statistics, and actionable insights as possible. "
+            "Focus on what a non-expert young adult interested in personal finance can understand and act on."
+        ),
+        user_message=(
+            f"Topic: {english_topic}\n\n"
+            f"Curated research document:\n\n{content}\n\n"
+            "Extract all relevant structured findings from this document. "
+            "Everything must be written in English."
+        ),
+        fn_name="submit_research_extraction",
+        fn_description="Extract structured research findings from a curated document.",
+        fn_parameters={
             "type": "object",
             "required": ["key_facts"],
             "properties": {
                 "key_facts": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Core factual findings in English: figures, benchmarks, rules, thresholds",
+                    "description": "Core factual findings in English",
                 },
                 "key_developments": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Recent news, trends, or changes described in the document (in English)",
+                    "description": "Recent news, trends, or changes",
                 },
                 "personal_finance_applications": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Concrete actions a regular person can take based on this research (in English)",
+                    "description": "Concrete actions people can take",
                 },
                 "common_mistakes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Frequent errors or misconceptions about this topic mentioned in the document (in English)",
+                    "description": "Frequent errors or misconceptions",
                 },
                 "statistics": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Quantified data points: returns, fees, rates, percentages (in English)",
+                    "description": "Quantified data points",
                 },
                 "simple_analogies": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Comparisons or metaphors that make the concept easy to understand (in English)",
+                    "description": "Comparisons or metaphors",
                 },
                 "expert_quotes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Notable quotes or attributed statements from the document (in English)",
+                    "description": "Notable quotes or attributed statements",
                 },
             },
         },
-    }
-
-    response = _client.messages.create(
-        model=_MODEL,
-        system=(
-            "You are a research analyst extracting structured findings from a curated document. "
-            "The document may be in any language — you MUST extract and write all output in English. "
-            "Be thorough: extract as many key facts, statistics, and actionable insights as possible. "
-            "Focus on what a non-expert young adult interested in personal finance can understand and act on."
-        ),
-        messages=[{
-            "role": "user",
-            "content": (
-                f"Topic: {english_topic}\n\n"
-                f"Curated research document:\n\n{content}\n\n"
-                "Extract all relevant structured findings from this document. "
-                "Everything must be written in English."
-            ),
-        }],
-        tools=[tool],
-        tool_choice={"type": "tool", "name": "submit_research_extraction"},
-        max_tokens=4096,
+        max_output_tokens=4096,
     )
-
-    extracted = {}
-    for block in response.content:
-        if block.type == "tool_use":
-            extracted = block.input
-            break
 
     return {
         "topic": english_topic,

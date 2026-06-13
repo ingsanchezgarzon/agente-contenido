@@ -19,7 +19,6 @@ import json as json_lib
 from datetime import datetime, timezone
 from pathlib import Path
 
-import anthropic
 import requests
 
 ROOT = Path(__file__).parent.parent
@@ -28,21 +27,18 @@ sys.path.insert(0, str(ROOT))
 from dotenv import load_dotenv
 
 from utils.file_helpers import load_markdown, save_json
+from utils.gemini_helpers import call_text_only, call_with_vision
 from utils.logger import error, info, success, warning
 from utils.retry import with_retry
 
 load_dotenv()
 
 AGENT = "designer-agent"
-TEXT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
-VISION_MODEL = os.getenv("ANTHROPIC_VISION_MODEL", "claude-sonnet-4-6")
 MAX_GENERATION_ATTEMPTS = int(os.getenv("DESIGNER_MAX_ATTEMPTS", "3"))
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-2-text-to-image")
 KIE_API_KEY = os.getenv("KIE_AI_API_KEY", "").strip()
 KIE_CREATE_URL = "https://api.kie.ai/api/v1/jobs/createTask"
 KIE_QUERY_URL  = "https://api.kie.ai/api/v1/jobs/recordInfo"
-
-anthropic_client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
 
 
 # Tolerant header matcher: accepts the canonical "--- SLIDE 1 of 6: INTRO ---"
@@ -78,13 +74,11 @@ def _parse_prompts(prompts_file: Path) -> list[dict]:
 @with_retry()
 def _enhance_prompt(raw_prompt: str, system_prompt: str) -> str:
     info(AGENT, "Enhancing prompt with designer AI…")
-    response = anthropic_client.messages.create(
-        model=TEXT_MODEL,
-        system=system_prompt,
-        messages=[{"role": "user", "content": f"Raw slide prompt:\n\n{raw_prompt}"}],
-        max_tokens=1024,
+    enhanced = call_text_only(
+        system_prompt=system_prompt,
+        user_message=f"Raw slide prompt:\n\n{raw_prompt}",
+        max_output_tokens=1024,
     )
-    enhanced = response.content[0].text.strip()
     if not enhanced:
         warning(AGENT, "Enhancement returned empty — using raw prompt")
         return raw_prompt
@@ -203,12 +197,8 @@ _CRITIQUE_TOOL = {
 @with_retry()
 def _critique_image(image_bytes: bytes, slide: dict) -> dict:
     """Visually inspect a generated slide with a vision model. Returns the critique dict."""
-    response = anthropic_client.messages.create(
-        model=VISION_MODEL,
-        max_tokens=1024,
-        tools=[_CRITIQUE_TOOL],
-        tool_choice={"type": "tool", "name": "submit_critique"},
-        system=(
+    return call_with_vision(
+        system_prompt=(
             "You are a ruthless visual QA inspector for premium fintech Instagram stories "
             "(1080x1920, 9:16). Brand: navy #1a2744 or cream #f7f5f0 background, gold #c9a84c "
             "accents, white text, Montserrat-style bold headlines, flat vector, radical "
@@ -217,36 +207,53 @@ def _critique_image(image_bytes: bytes, slide: dict) -> dict:
             "the text in the image character-by-character against the expected text. Be strict: "
             "a slide with any text error or legibility below 4/5 fails."
         ),
-        messages=[{
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "source": {
-                        "type": "base64",
-                        "media_type": "image/png",
-                        "data": base64.standard_b64encode(image_bytes).decode("ascii"),
-                    },
+        user_message=(
+            f"Slide {slide['slide_num']} of {slide['total']} ({slide['type']}).\n\n"
+            f"The prompt that generated this image (contains the expected headline "
+            f"and body text):\n\n{slide['prompt']}\n\n"
+            "Inspect the image and submit your critique. Check: (1) every piece of "
+            "rendered text against the expected text, word by word; (2) legibility "
+            "on a phone, including Instagram UI safe zones; (3) brand color and "
+            "layout compliance."
+        ),
+        image_bytes=image_bytes,
+        fn_name="submit_critique",
+        fn_description="Submit the visual QA verdict for one Instagram story slide.",
+        fn_parameters={
+            "type": "object",
+            "required": ["passes", "text_renders_exactly", "legibility_score",
+                         "brand_violations", "revision_guidance"],
+            "properties": {
+                "passes": {
+                    "type": "boolean",
+                    "description": "True only if the slide is publishable as-is: text exact, legible, on-brand.",
                 },
-                {
-                    "type": "text",
-                    "text": (
-                        f"Slide {slide['slide_num']} of {slide['total']} ({slide['type']}).\n\n"
-                        f"The prompt that generated this image (contains the expected headline "
-                        f"and body text):\n\n{slide['prompt']}\n\n"
-                        "Inspect the image and submit your critique. Check: (1) every piece of "
-                        "rendered text against the expected text, word by word; (2) legibility "
-                        "on a phone, including Instagram UI safe zones; (3) brand color and "
-                        "layout compliance."
-                    ),
+                "text_renders_exactly": {
+                    "type": "boolean",
+                    "description": "True if every word appears correctly spelled with no garbled/duplicated text.",
                 },
-            ],
-        }],
+                "rendered_text_errors": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Each spelling/rendering deviation.",
+                },
+                "legibility_score": {
+                    "type": "integer",
+                    "description": "1-5 score for readability on phone.",
+                },
+                "brand_violations": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Deviations from brand colors or style.",
+                },
+                "revision_guidance": {
+                    "type": "string",
+                    "description": "Concrete instructions to fix problems, or empty string if passing.",
+                },
+            },
+        },
+        max_output_tokens=1024,
     )
-    for block in response.content:
-        if block.type == "tool_use":
-            return block.input
-    raise RuntimeError(f"Vision critique returned no tool call (stop_reason={response.stop_reason})")
 
 
 def _generate_with_critique(slide: dict, enhanced_prompt: str, output_path: Path) -> list[dict]:

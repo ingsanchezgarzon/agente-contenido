@@ -13,7 +13,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
 from jinja2 import Template
 
@@ -24,21 +23,13 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from utils.file_helpers import load_json, load_markdown, load_yaml, save_json, slugify, validate_json
+from utils.gemini_helpers import call_text_only, call_with_tool
 from utils.logger import error, info, success, warning
 from utils.web_search import search
 
 AGENT = "research-agent"
 
-client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
-MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 
-
-def _extract_tool_input(response) -> dict:
-    """Pull the tool_use input block out of an Anthropic response."""
-    for block in response.content:
-        if block.type == "tool_use":
-            return block.input
-    raise RuntimeError(f"Model did not call a tool. Stop reason: {response.stop_reason}")
 
 
 # ── prompt ────────────────────────────────────────────────────────────────────
@@ -84,13 +75,11 @@ def _find_relevant_inputs(topic: str) -> list[dict]:
         "useful for researching this topic. If none are relevant, reply with exactly: NONE"
     )
 
-    response = client.messages.create(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=256,
+    response_text = call_text_only(
+        system_prompt="You are a file matcher for research documents.",
+        user_message=prompt,
+        max_output_tokens=256,
     )
-
-    response_text = response.content[0].text.strip()
     if response_text.upper() == "NONE":
         info(AGENT, "No curated research files matched the topic.")
         return []
@@ -108,28 +97,6 @@ def _find_relevant_inputs(topic: str) -> list[dict]:
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-_QUERY_TOOL = {
-    "name": "submit_search_queries",
-    "description": "Submit a precise list of 3 to 5 web search queries for the topic.",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "queries": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": (
-                    "3-5 search queries targeting personal finance publications "
-                    "(NerdWallet, Investopedia, Bankrate, Motley Fool, CNBC), "
-                    "and general financial news (Bloomberg, Reuters, FT, WSJ). "
-                    "Include date qualifiers like '2025' or '2026' to surface recent developments."
-                ),
-            }
-        },
-        "required": ["queries"],
-    },
-}
-
-
 def _generate_search_queries(topic: str, system_prompt: str, curated_docs: list[dict] | None = None) -> list[str]:
     info(AGENT, f"Generating search queries for: {topic}")
     curated_note = ""
@@ -141,15 +108,30 @@ def _generate_search_queries(topic: str, system_prompt: str, curated_docs: list[
             "new data, or angles not covered by a deep-research document."
         )
     try:
-        response = client.messages.create(
-            model=MODEL,
-            system=system_prompt,
-            messages=[{"role": "user", "content": f"Topic to research: {topic}{curated_note}\nGenerate search queries following your process."}],
-            tools=[_QUERY_TOOL],
-            tool_choice={"type": "tool", "name": "submit_search_queries"},
-            max_tokens=512,
+        result = call_with_tool(
+            system_prompt=system_prompt,
+            user_message=f"Topic to research: {topic}{curated_note}\nGenerate search queries following your process.",
+            fn_name="submit_search_queries",
+            fn_description="Submit a precise list of 3 to 5 web search queries for the topic.",
+            fn_parameters={
+                "type": "object",
+                "properties": {
+                    "queries": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": (
+                            "3-5 search queries targeting personal finance publications "
+                            "(NerdWallet, Investopedia, Bankrate, Motley Fool, CNBC), "
+                            "and general financial news (Bloomberg, Reuters, FT, WSJ). "
+                            "Include date qualifiers like '2025' or '2026' to surface recent developments."
+                        ),
+                    }
+                },
+                "required": ["queries"],
+            },
+            max_output_tokens=512,
         )
-        queries: list[str] = list(_extract_tool_input(response)["queries"])
+        queries: list[str] = list(result["queries"])
     except Exception as e:
         raise RuntimeError(f"Failed to generate search queries: {e}") from e
     info(AGENT, f"Generated {len(queries)} queries")
@@ -229,21 +211,15 @@ def _synthesize(
         "Complete steps 3–5 of your process: extract key facts, relevant laws, "
         "statistics, and expert quotes from all sources above."
     )
-    synthesis_tool = {
-        "name": "submit_research_synthesis",
-        "description": "Submit extracted research findings: facts, statistics, and quotes.",
-        "input_schema": _build_synthesis_params(),
-    }
     try:
-        response = client.messages.create(
-            model=MODEL,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_message}],
-            tools=[synthesis_tool],
-            tool_choice={"type": "tool", "name": "submit_research_synthesis"},
-            max_tokens=4096,
+        extracted = call_with_tool(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            fn_name="submit_research_synthesis",
+            fn_description="Submit extracted research findings: facts, statistics, and quotes.",
+            fn_parameters=_build_synthesis_params(),
+            max_output_tokens=4096,
         )
-        extracted = _extract_tool_input(response)
     except Exception as e:
         raise RuntimeError(f"Failed to synthesize research: {e}") from e
 

@@ -10,7 +10,6 @@ Usage:
     python agents/publisher_agent.py how-to-start-investing-2026
 """
 
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,20 +17,16 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-import anthropic
-
 from dotenv import load_dotenv
 
 from utils.file_helpers import load_json, load_markdown, save_json
+from utils.gemini_helpers import call_with_tool, call_text_only, MODEL
 from utils.logger import error, info, success, warning
 from utils.retry import with_retry
 
 load_dotenv()
 
 AGENT = "publisher-agent"
-TEXT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
-
-anthropic_client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -99,22 +94,34 @@ def _generate_story_prompts(reviewed: dict) -> tuple[str, list[dict]]:
         "Use the exact headline and body text from the story plan verbatim."
     )
 
-    response = anthropic_client.messages.create(
-        model=TEXT_MODEL,
-        system=publisher_prompt,
-        messages=[{"role": "user", "content": user_message}],
-        tools=[_PROMPTS_TOOL],
-        tool_choice={"type": "tool", "name": "submit_slide_prompts"},
-        max_tokens=6000,
+    prompt_slides = call_with_tool(
+        system_prompt=publisher_prompt,
+        user_message=user_message,
+        fn_name="submit_slide_prompts",
+        fn_description="Submit one complete, self-contained image generation prompt per story slide.",
+        fn_parameters={
+            "type": "object",
+            "required": ["slides"],
+            "properties": {
+                "slides": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["slide_number", "role", "prompt"],
+                        "properties": {
+                            "slide_number": {"type": "integer"},
+                            "role": {"type": "string", "description": "e.g. intro, step_1, top_3, final"},
+                            "prompt": {"type": "string", "description": "Complete 150-250 word image prompt."},
+                        },
+                    },
+                }
+            },
+        },
+        max_output_tokens=6000,
     )
-
-    prompt_slides: list[dict] = []
-    for block in response.content:
-        if block.type == "tool_use":
-            prompt_slides = list(block.input.get("slides", []))
-            break
+    prompt_slides = list(prompt_slides.get("slides", []))
     if not prompt_slides:
-        raise RuntimeError("Publisher model returned no slide prompts (no tool call)")
+        raise RuntimeError("Publisher model returned no slide prompts")
     if len(prompt_slides) != total:
         warning(AGENT, f"Model returned {len(prompt_slides)} prompts for {total} slides")
 
@@ -156,21 +163,16 @@ def _generate_instagram_caption(reviewed: dict) -> str:
         f"- Slide {s.get('slide_number')}: {s.get('headline')} — {s.get('body')}"
         for s in slides
     )
-    response = anthropic_client.messages.create(
-        model=TEXT_MODEL,
-        system=_CAPTION_SYSTEM,
-        messages=[{
-            "role": "user",
-            "content": (
-                f"Topic: {reviewed.get('topic', '')}\n\n"
-                f"Approved post (source of truth for facts):\n{blog.get('title', '')}\n\n{blog.get('text', '')}\n\n"
-                f"Story slides being published:\n{slides_text}\n\n"
-                "Write the Instagram caption."
-            ),
-        }],
-        max_tokens=1500,
+    return call_text_only(
+        system_prompt=_CAPTION_SYSTEM,
+        user_message=(
+            f"Topic: {reviewed.get('topic', '')}\n\n"
+            f"Approved post (source of truth for facts):\n{blog.get('title', '')}\n\n{blog.get('text', '')}\n\n"
+            f"Story slides being published:\n{slides_text}\n\n"
+            "Write the Instagram caption."
+        ),
+        max_output_tokens=1500,
     )
-    return response.content[0].text.strip()
 
 
 # ── main entry point ──────────────────────────────────────────────────────────

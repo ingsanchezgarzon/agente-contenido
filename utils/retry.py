@@ -1,9 +1,9 @@
 """
 Global retry decorator with exponential backoff for all external API calls.
 
-Retries only transient failures: rate limits (429), server errors (>=500),
-overloaded responses, and network timeouts/disconnects. Client errors
-(400/401/404, schema problems) fail immediately — retrying those wastes money.
+Retries only transient failures: rate limits, server errors, timeouts, and
+connection errors. Client errors (bad input, invalid schema) fail immediately
+— retrying those wastes money and time.
 
 Usage:
     from utils.retry import with_retry
@@ -19,22 +19,28 @@ import functools
 import random
 import time
 
-import anthropic
 import requests
 
 from utils.logger import warning
 
 
 def _is_retryable(exc: Exception) -> bool:
-    if isinstance(exc, (anthropic.RateLimitError, anthropic.APIConnectionError,
-                        anthropic.InternalServerError)):
+    """Check if an exception is transient (retryable) or permanent (fail-fast)."""
+    # Gemini API errors
+    if isinstance(exc, requests.exceptions.Timeout):
         return True
-    if isinstance(exc, anthropic.APIStatusError):
-        return exc.status_code in (408, 429, 529) or exc.status_code >= 500
-    if isinstance(exc, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
+    if isinstance(exc, requests.exceptions.ConnectionError):
         return True
     if isinstance(exc, requests.exceptions.HTTPError) and exc.response is not None:
+        # Retry on 408 (Request Timeout), 429 (Rate Limited), 5xx (Server Error)
         return exc.response.status_code in (408, 429) or exc.response.status_code >= 500
+    # Google SDK errors
+    try:
+        from google.api_core.exceptions import RetryError, InternalServerError, ServiceUnavailable, TooManyRequests, DeadlineExceeded
+        if isinstance(exc, (RetryError, InternalServerError, ServiceUnavailable, TooManyRequests, DeadlineExceeded)):
+            return True
+    except ImportError:
+        pass
     return False
 
 

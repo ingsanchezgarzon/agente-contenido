@@ -12,11 +12,9 @@ Usage:
 """
 
 import json
-import os
 import sys
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
 from jinja2 import BaseLoader, Environment
 
@@ -26,12 +24,10 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from utils.file_helpers import load_json, load_markdown, save_json, validate_json
+from utils.gemini_helpers import call_with_tool
 from utils.logger import error, info, success, warning
 
 AGENT = "editor-agent"
-MODEL = "claude-haiku-4-5"
-
-client = anthropic.Anthropic(api_key=os.environ["API_Claude"])
 
 
 # ── prompt ────────────────────────────────────────────────────────────────────
@@ -67,30 +63,16 @@ def _build_review_params() -> dict:
 
 def _run_review(system_prompt: str, user_message: str) -> dict:
     params = _build_review_params()
-    tool = {
-        "name": "submit_review",
-        "description": (
+    return call_with_tool(
+        system_prompt=system_prompt,
+        user_message=user_message,
+        fn_name="submit_review",
+        fn_description=(
             "Submit the editorial review results, the corrected blog post, "
             "and the complete Instagram story plan with one slide object per story slide."
         ),
-        "input_schema": params,
-    }
-
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=6144,
-        system=system_prompt,
-        tools=[tool],
-        tool_choice={"type": "tool", "name": "submit_review"},
-        messages=[{"role": "user", "content": user_message}],
-    )
-
-    for block in response.content:
-        if block.type == "tool_use" and block.name == "submit_review":
-            return block.input
-
-    raise RuntimeError(
-        f"Claude Haiku did not return a tool call (stop_reason={response.stop_reason})"
+        fn_parameters=params,
+        max_output_tokens=6144,
     )
 
 
